@@ -1,0 +1,35 @@
+{
+  "data": {
+    "attributes": {
+      "name": "",
+      "user-type": "soho",
+      "account-id": "123457",
+      "active-status": "active",
+      "characteristics": {
+
+      },
+      "valid-for": {
+        "start-datetime": "2000-01-01T00:00:00.000Z",
+        "end-datetime": "3000-01-01T00:00:00.000Z",
+        "meta": {
+          "type": "valid-for-datetime"
+        }
+      }
+    },
+    "relationships": {
+      "partner-accounts": {
+        "links": {
+          "related": "/api/user-accounts/qvantel-useraccount1/partner-accounts"
+        }
+      }
+    },
+    "links": {
+      "self": "/api/user-accounts/qvantel-useraccount1"
+    },
+    "id": "qvantel-useraccount1",
+    "type": "user-accounts"
+  },
+  "links": {
+    "self": "/api/user-accounts/qvantel-useraccount1"
+  }
+}

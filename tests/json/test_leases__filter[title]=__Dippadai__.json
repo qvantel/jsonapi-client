@@ -1,0 +1,28 @@
+{
+  "links": {
+    "first": "http://example.com/test_leases",
+    "self": "http://example.com/test_leases",
+    "next": "http://example.com/test_leases_3",
+    "last": "http://example.com/test_leases_5"
+  },
+  "data": [
+  {
+    "type": "test_leases",
+    "id": "1",
+    "attributes": {
+      "title": "Dippadai"
+    },
+    "relationships": {
+      "external-references": {
+        "links": {
+          "self": "http://example.com/test_leases_links/1/external_references/links",
+          "related": "http://example.com/external"
+        }
+      }
+    },
+    "links": {
+      "self": "http://example.com/test_leases/1"
+    }
+  }
+  ]
+}

@@ -1,0 +1,20 @@
+ {
+  "links": {
+    "first": "http://example.com/external",
+    "self": "http://example.com/external",
+    "next": "http://example.com/external_3",
+    "last": "http://example.com/external_3"
+  },
+  "data": [
+  {
+    "type": "external",
+    "id": "2",
+    "attributes": {
+      "title": "Hep"
+    },
+    "links": {
+      "self": "http://example.com/external/2"
+    }
+  }
+  ]
+}

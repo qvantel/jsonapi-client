@@ -1,0 +1,45 @@
+{
+  "data": {
+    "attributes": {
+      "lease-id": null,
+      "active-status": "active",
+      "reference-number": "5373K5",
+      "valid-for": {
+        "start-datetime": "2015-07-06T12:23:26.000Z",
+        "end-datetime": null,
+        "meta": {
+          "type": "valid-for-datetime"
+        }
+      }
+    },
+    "relationships": {
+      "external-references": {
+        "links": {
+          "related": "/api/leases/qvantel-lease1/external-references"
+        }
+      },
+      "user-account": {
+        "links": {
+          "related": "/api/leases/qvantel-lease1/user-account"
+        },
+        "data": {
+          "id": "qvantel-useraccount1",
+          "type": "user-accounts"
+        }
+      },
+      "parent-lease": {
+        "links": {
+          "related": "/api/leases/qvantel-lease1/parent-lease"
+        }
+      }
+    },
+    "links": {
+      "self": "/api/leases/qvantel-lease1"
+    },
+    "id": "qvantel-lease1",
+    "type": "leases"
+  },
+  "links": {
+    "self": "/api/leases/qvantel-lease1"
+  }
+}

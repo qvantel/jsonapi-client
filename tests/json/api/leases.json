@@ -1,0 +1,167 @@
+{
+  "data": [{
+    "attributes": {
+      "lease-id": null,
+      "active-status": "active",
+      "reference-number": "5373K5",
+      "valid-for": {
+        "start-datetime": "2015-07-06T12:23:26.000Z",
+        "end-datetime": null,
+        "meta": {
+          "type": "valid-for-datetime"
+        }
+      }
+    },
+    "relationships": {
+      "external-references": {
+        "links": {
+          "related": "/api/leases/qvantel-lease1/external-references"
+        }
+      },
+      "user-account": {
+        "links": {
+          "related": "/api/leases/qvantel-lease1/user-account"
+        },
+        "data": {
+          "id": "qvantel-useraccount1",
+          "type": "user-accounts"
+        }
+      },
+
+      "parent-lease": {
+        "links": {
+          "related": "/api/leases/qvantel-lease1/parent-lease"
+        }
+      }
+    },
+    "links": {
+      "self": "/api/leases/qvantel-lease1"
+    },
+    "id": "qvantel-lease1",
+    "type": "leases"
+  }, {
+    "attributes": {
+      "lease-id": null,
+      "active-status": "active",
+      "reference-number": "5373K5",
+      "valid-for": {
+        "start-datetime": "2016-11-03T00:00:00.000Z",
+        "end-datetime": null,
+        "meta": {
+          "type": "valid-for-datetime"
+        }
+      }
+    },
+    "relationships": {
+      "external-references": {
+        "links": {
+          "related": "/api/leases/juanita-lease1/external-references"
+        }
+      },
+      "user-account": {
+        "links": {
+          "related": "/api/leases/juanita-lease1/user-account"
+        },
+        "data": {
+          "id": "juanita-useraccount",
+          "type": "user-accounts"
+        }
+      },
+      "parent-lease": {
+        "links": {
+          "related": "/api/leases/juanita-lease1/parent-lease"
+        }
+      }
+    },
+    "links": {
+      "self": "/api/leases/juanita-lease1"
+    },
+    "id": "juanita-lease1",
+    "type": "leases"
+  }, {
+    "attributes": {
+      "lease-id": null,
+      "active-status": "active",
+      "reference-number": "5333B5",
+      "valid-for": {
+        "start-datetime": "2016-06-21T16:00:07.000Z",
+        "end-datetime": null,
+        "meta": {
+          "type": "valid-for-datetime"
+        }
+      }
+    },
+    "relationships": {
+      "external-references": {
+        "links": {
+          "related": "/api/leases/timo-lease1/external-references"
+        }
+      },
+      "user-account": {
+        "links": {
+          "related": "/api/leases/timo-lease1/user-account"
+        },
+        "data": {
+          "id": "timo-useraccount",
+          "type": "user-accounts"
+        }
+      },
+      "parent-lease": {
+        "links": {
+          "related": "/api/leases/timo-lease1/parent-lease"
+        }
+      }
+    },
+    "links": {
+      "self": "/api/leases/timo-lease1"
+    },
+    "id": "timo-lease1",
+    "type": "leases"
+  }, {
+    "attributes": {
+      "lease-id": "ext-doc-store-id-1",
+      "active-status": "active",
+      "reference-number": "M33B3F",
+      "valid-for": {
+        "start-datetime": "2015-10-06T16:21:07.000Z",
+        "end-datetime": null,
+        "meta": {
+          "type": "valid-for-datetime"
+        }
+      }
+    },
+    "relationships": {
+      "external-references": {
+        "links": {
+          "related": "/api/leases/qvantel-lease2/external-references"
+        }
+      },
+      "user-account": {
+        "links": {
+          "related": "/api/leases/qvantel-lease2/user-account"
+        },
+        "data": {
+          "id": "qvantel-useraccount1",
+          "type": "user-accounts"
+        }
+      },
+      "parent-lease": {
+        "links": {
+          "related": "/api/leases/qvantel-lease2/parent-lease"
+        },
+        "data": {
+          "id": "qvantel-saleslease3",
+          "type": "sales-leases"
+        }
+      }
+    },
+    "links": {
+      "self": "/api/leases/qvantel-lease2"
+    },
+    "id": "qvantel-lease2",
+    "type": "leases"
+  }],
+  "links": {
+    "self": "/api/leases"
+  }
+}

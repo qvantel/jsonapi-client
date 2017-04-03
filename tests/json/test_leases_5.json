@@ -1,0 +1,48 @@
+{
+  "links": {
+    "first": "http://example.com/test_leases",
+    "self": "http://example.com/test_leases_5",
+    "prev": "http://example.com/test_leases_3",
+    "last": "http://example.com/test_leases_5"
+  },
+  "data": [
+
+  {
+    "type": "test_leases",
+    "id": "5",
+    "attributes": {
+      "title": "JSON API paints my bikeshed!"
+    },
+    "relationships": {
+      "external-references": {
+        "links": {
+          "self": "http://example.com/test_leases/1/external_references/links",
+          "related": "http://example.com/test_leases/1/external_references"
+        }
+      }
+    },
+    "links": {
+      "self": "http://example.com/test_leases/1"
+    }
+  },
+
+  {
+    "type": "test_leases",
+    "id": "6",
+    "attributes": {
+      "title": "JSON API paints my bikeshed!"
+    },
+    "relationships": {
+      "external-references": {
+        "links": {
+          "self": "http://example.com/test_leases/2/external_references/links",
+          "related": "http://example.com/test_leases/2/external_references"
+        }
+      }
+    },
+    "links": {
+      "self": "http://example.com/test_leases/2"
+    }
+  }
+  ]
+}

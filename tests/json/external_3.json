@@ -1,0 +1,29 @@
+{
+  "links": {
+    "first": "http://example.com/external",
+    "self": "http://example.com/external_3",
+    "last": "http://example.com/external_3"
+  },
+  "data": [
+  {
+    "type": "external",
+    "id": "3",
+    "attributes": {
+      "title": "JSON API paints my bikeshed!"
+    },
+    "links": {
+      "self": "http://example.com/external/1"
+    }
+  },
+  {
+    "type": "external",
+    "id": "4",
+    "attributes": {
+      "title": "JSON API paints my bikeshed!"
+    },
+    "links": {
+      "self": "http://example.com/external/2"
+    }
+  }
+  ]
+}

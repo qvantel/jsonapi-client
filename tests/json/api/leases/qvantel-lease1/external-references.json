@@ -1,0 +1,34 @@
+{
+  "data": [{
+    "attributes": {
+      "reference-id": "0123015150",
+      "reference-type": "legacy-bss-contract-id",
+      "valid-for": {
+        "start-datetime": "2000-01-01T00:00:00.000Z",
+        "end-datetime": "2017-01-01T00:00:00.000Z",
+        "meta": {
+          "type": "valid-for-datetime"
+        }
+      }
+    },
+    "relationships": {
+      "target": {
+        "links": {
+          "related": "/api/external-references/qvantel-lease1-extref/target"
+        },
+        "data": {
+          "id": "qvantel-lease1",
+          "type": "leases"
+        }
+      }
+    },
+    "links": {
+      "self": "/api/external-references/qvantel-lease1-extref"
+    },
+    "id": "qvantel-lease1-extref",
+    "type": "external-references"
+  }],
+  "links": {
+    "self": "/api/leases/qvantel-lease1/external-references"
+  }
+}

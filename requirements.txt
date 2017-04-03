@@ -1,0 +1,11 @@
+requests
+pytest-asyncio
+pytest-mock
+pytest
+asynctest
+jsonschema
+aiohttp
+aiodns
+sphinx
+sphinx-autodoc-annotation
+pytest-cov

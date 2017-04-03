@@ -1,0 +1,14 @@
+{
+  "data": {
+    "type": "people",
+    "id": "2",
+    "attributes": {
+      "first-name": "Dan 2",
+      "last-name": "Gebhardt 2",
+      "twitter": "dgeb 2"
+    },
+    "links": {
+      "self": "http://example.com/people/2"
+    }
+  }
+}
