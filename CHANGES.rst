@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+[2017-04-03] 0.9.2
+------------------
+- Github release.
+
 [2017-03-23] 0.9.1
 ------------------
 - Fix async content_type checking
