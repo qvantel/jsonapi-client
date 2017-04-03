@@ -67,9 +67,9 @@ class AbstractRelationship(AbstractJsonObject):
         :param relation_type: Relation type, either 'to-one' or 'to-many',
             or not specified (empty string).
         """
-        self._resources: Dict[Tuple[str, str], ResourceObject] = None
+        self._resources = None # type: Dict[Tuple[str, str], ResourceObject]
         self._invalid = False
-        self._is_dirty: bool = False
+        self._is_dirty= False # type: bool
         self._resource_types = resource_types or []
         self._relation_type = relation_type
 
@@ -346,7 +346,7 @@ class LinkRelationship(AbstractRelationship):
     """
     def __init__(self, *args, **kwargs):
         self._resource_identifiers = None
-        self._document: 'Document' = None
+        self._document = None # type: Document
         super().__init__(*args, **kwargs)
 
     def __bool__(self):
@@ -385,7 +385,7 @@ class LinkRelationship(AbstractRelationship):
             self._document.mark_invalid()
 
     def __str__(self):
-        return (f'{self.url} ({len(self.resources)}) dirty: {self.is_dirty}'
+        return ('%s (%s) dirty: %s' % (self.url, len(self.resources), self.is_dirty)
                 if self.is_fetched else self.url)
 
     @property

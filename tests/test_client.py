@@ -146,12 +146,12 @@ def api_schema(request):
 
 def load(filename):
     filename = filename.replace('?', '__').replace('"', '__')
-    fname = os.path.join(os.path.dirname(__file__), 'json', f'{filename}.json')
+    fname = os.path.join(os.path.dirname(__file__), 'json', '%s.json'%filename)
     try:
         with open(fname, 'r') as f:
             return json.load(f)
     except FileNotFoundError:
-        raise DocumentError(f'File not found: {fname}', errors=dict(status_code=404))
+        raise DocumentError('File not found: %s'%fname, errors=dict(status_code=404))
 
 
 
@@ -183,7 +183,7 @@ def mocked_fetch(mocker):
         parsed_url = urlparse(url)
         file_path = parsed_url.path[1:]
         query = parsed_url.query
-        return load(f'{file_path}?{query}' if query else file_path)
+        return load('%s?%s'%(file_path, query) if query else file_path)
 
     class MockedFetch:
         def __call__(self, url):
@@ -780,11 +780,15 @@ def test_result_pagination_iteration(mocked_fetch, api_schema):
         assert leases[l].id == str(l+1)
 
 
+@pytest.mark.skip("Python 3.6 only")
 @pytest.mark.asyncio
 async def test_result_pagination_iteration_async(mocked_fetch, api_schema):
     s = Session('http://localhost:8080/', schema=api_schema, enable_async=True)
 
-    leases = [r async for r in s.iterate('test_leases')]
+    leases = []
+    async for r in s.iterate('test_leases'):
+        leases.append(r)
+
     assert len(leases) == 6
     for l in range(len(leases)):
         assert leases[l].id == str(l+1)
@@ -795,7 +799,7 @@ def test_result_filtering(mocked_fetch, api_schema):
     s = Session('http://localhost:8080/', schema=api_schema)
 
     result = s.get('test_leases', Filter(title='Dippadai'))
-    result2 = s.get('test_leases', Filter(f'filter[title]="Dippadai"'))
+    result2 = s.get('test_leases', Filter('filter[title]="Dippadai"'))
 
     assert result == result2
 

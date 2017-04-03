@@ -61,7 +61,7 @@ class Filter:
         """
 
         filter_query = self._query_str or self.format_filter_query(**self._filter_kwargs)
-        fetch_url = f'{base_url}?{filter_query}'
+        fetch_url = '%s?%s' % (base_url, filter_query)
         return fetch_url
 
     def format_filter_query(self, **kwargs: 'FilterKeywords') -> str:
@@ -71,5 +71,5 @@ class Filter:
         """
         def jsonify_key(key):
             return key.replace('__', '.').replace('_', '-')
-        return '&'.join(f'filter[{jsonify_key(key)}]="{value}"'
+        return '&'.join('filter[%s]="%s"' % (jsonify_key(key), value)
                         for key, value in kwargs.items())

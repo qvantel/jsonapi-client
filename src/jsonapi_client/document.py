@@ -54,7 +54,6 @@ class Document(AbstractJsonObject):
     """
 
     #: List of ResourceObjects contained in this Document
-    resources: List['ResourceObject']
 
     def __init__(self, session: 'Session',
                  json_data: dict,
@@ -100,7 +99,7 @@ class Document(AbstractJsonObject):
         self.jsonapi = json_data.get('jsonapi', {})
         self.links = Links(self.session, json_data.get('links', {}))
         if self.errors:
-            raise DocumentError(f'Error document was fetched. Details: {self.errors}',
+            raise DocumentError('Error document was fetched. Details: %s' % self.errors,
                                 errors=self.errors)
         self.included = [ResourceObject(self.session, i)
                          for i in json_data.get('included', [])]
@@ -108,7 +107,7 @@ class Document(AbstractJsonObject):
             self.session.add_resources(*self.resources, *self.included)
 
     def __str__(self):
-        return f'{self.resources}' if self.resources else f'{self.errors}'
+        return '%s' % self.resources if self.resources else '%s' % self.errors
 
     def _iterator_sync(self) -> 'Iterator[ResourceObject]':
         yield from self.resources
@@ -118,12 +117,12 @@ class Document(AbstractJsonObject):
 
     async def _iterator_async(self) -> 'AsyncIterator[ResourceObject]':
         for res in self.resources:
-            yield res
+            raise NotImplementedError
 
         if self.links.next:
             next_doc = await self.links.next.fetch()
             async for res in next_doc.iterator():
-                yield res
+                raise NotImplementedError
 
     def iterator(self):
         """

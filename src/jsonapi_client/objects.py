@@ -84,7 +84,7 @@ class Link(AbstractJsonObject):
         if urlparse(self.href).scheme:  # if href contains only relative link
             return self.href
         else:
-            return f'{self.session.server_url}{self.href}'
+            return '%s%s' % (self.session.server_url, self.href)
 
     def __str__(self):
         return self.url if self.href else ''
@@ -138,15 +138,15 @@ class ResourceIdentifier(AbstractJsonObject):
     http://jsonapi.org/format/#document-resource-identifier-objects
     """
     def _handle_data(self, data):
-        self.id:str = data.get('id')
-        self.type:str = data.get('type')
+        self.id = data.get('id') # type: str
+        self.type = data.get('type') # type: str
 
     @property
     def url(self):
-        return f'{self.session.url_prefix}/{self.type}/{self.id}'
+        return '%s/%s/%s' % (self.session.url_prefix, self.type, self.id)
 
     def __str__(self):
-        return f'{self.type}: {self.id}'
+        return '%s: %s' % (self.type, self.id)
 
     def fetch_sync(self, cache_only=True) -> 'ResourceObject':
         return self.session.fetch_resource_by_resource_identifier(self, cache_only)

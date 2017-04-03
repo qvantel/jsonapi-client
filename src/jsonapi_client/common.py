@@ -32,7 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import asyncio
 import logging
-from typing import Union, TYPE_CHECKING, NamedTuple
+from typing import Union, TYPE_CHECKING
+from collections import namedtuple
 
 if TYPE_CHECKING:
     from .session import Session
@@ -84,7 +85,7 @@ class AbstractJsonObject:
         raise NotImplementedError
 
     def __repr__(self):
-        return f'<{self.__class__.__name__}: {str(self)} ({id(self)})>'
+        return '<%s: %s %s>' % (self.__class__.__name__, str(self), id(self))
 
     def __str__(self):
         raise NotImplementedError
@@ -179,7 +180,5 @@ class AttributeProxy:
             raise AttributeError
 
 
-class ResourceTuple(NamedTuple):
-    id: str
-    type: str
+ResourceTuple = namedtuple('ResourceTuple', ('id', 'type'))
 

@@ -74,13 +74,13 @@ class AttributeDict(dict):
         self._parent = parent
         self._name = name
         self._resource = resource
-        self._schema: 'Schema' = resource.session.schema
-        self._full_name: str = name
+        self._schema = resource.session.schema # type: Schema
+        self._full_name = name # type: str
         self._invalid = False
-        self._dirty_attributes: Set[str] = set()
+        self._dirty_attributes = set() # type: Set[str]
 
         if self._parent is not None and self._parent._full_name:
-            self._full_name = f'{parent._full_name}.{name}'
+            self._full_name = '%s.%s' % (parent._full_name, name)
 
         specification = self._schema.find_spec(self._resource.type, self._full_name)
 
@@ -89,10 +89,7 @@ class AttributeDict(dict):
             for key, value in specification['properties'].items():
                 if value.get('type') == 'object':
                     _data = data.pop(key, {})
-                    self[key] = AttributeDict(data=_data,
-                                              name=key,
-                                              parent=self,
-                                              resource=resource)
+                    self[key] = AttributeDict(data=_data, name=key, parent=self, resource=resource)
                 elif 'relation' in value:
                     pass  # Special handling for relationships
                 else:
@@ -125,8 +122,9 @@ class AttributeDict(dict):
     def __getattr__(self, name):
         name = jsonify_attribute_name(name)
         if name not in self:
-            raise AttributeError(f'No such attribute '
-                                 f'{self._resource.type}.{self._full_name}.{name}')
+            raise AttributeError('No such attribute %s.%s.%s' % (self._resource.type,
+                                                                 self._full_name,
+                                                                 name))
         return self[name]
 
     def __setitem__(self, key, value):
@@ -427,7 +425,7 @@ class ResourceObject(AbstractJsonObject):
                      self._relationships.keys_python())
 
     def __str__(self):
-        return f'{self.type}: {self.id} ({id(self)})'
+        return '%s: %s (%s)' % (self.type, self.id, id(self))
 
     @property
     def json(self) -> dict:
@@ -466,11 +464,11 @@ class ResourceObject(AbstractJsonObject):
     @property
     def url(self) -> str:
         url = str(self.links.self)
-        return url or self.id and f'{self.session.url_prefix}/{self.type}/{self.id}'
+        return url or self.id and '%s/%s/%s' % (self.session.url_prefix, self.type, self.id)
 
     @property
     def post_url(self) -> str:
-        return f'{self.session.url_prefix}/{self.type}'
+        return '%s/%s' % (self.session.url_prefix, self.type)
 
     def validate(self):
         """
@@ -579,9 +577,9 @@ class ResourceObject(AbstractJsonObject):
         self._attributes.mark_invalid()
         self._relationships.mark_invalid()
 
-        self._attributes: AttributeDict = new_res._attributes
+        self._attributes = new_res._attributes # type: AttributeDict
         self._attributes.change_resource(self)
-        self._relationships: RelationshipDict = new_res._relationships
+        self._relationships = new_res._relationships # type: RelationshipDict
         self._relationships.change_resource(self)
         self.meta = new_res.meta
         self.links = new_res.links
@@ -594,9 +592,7 @@ class ResourceObject(AbstractJsonObject):
 
     async def _refresh_async(self):
         self.session.assert_async()
-        new_res = await self.session.fetch_resource_by_resource_identifier_async(
-                                                                            self,
-                                                                            force=True)
+        new_res = await self.session.fetch_resource_by_resource_identifier_async(self, force=True)
         self._update_resource(new_res)
 
     def refresh(self):

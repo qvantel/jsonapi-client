@@ -120,7 +120,6 @@ class Session:
                  enable_async: bool=False,
                  schema: dict=None,
                  loop: 'AbstractEventLoop'=None) -> None:
-        self._server: ParseResult
         self.enable_async = enable_async
 
         if server_url:
@@ -128,11 +127,10 @@ class Session:
         else:
             self._server = None
 
-        self.resources_by_resource_identifier: \
-            'Dict[Tuple[str, str], ResourceObject]' = {}
-        self.resources_by_link: 'Dict[str, ResourceObject]' = {}
-        self.documents_by_link: 'Dict[str, Document]' = {}
-        self.schema: Schema = Schema(schema)
+        self.resources_by_resource_identifier = {} # type: Dict[Tuple[str, str], ResourceObject]
+        self.resources_by_link = {} # type: Dict[str, ResourceObject]
+        self.documents_by_link = {} # type: Dict[str, Document]
+        self.schema = Schema(schema) # type: Schema
         if enable_async:
             import aiohttp
             self._aiohttp_session = aiohttp.ClientSession(loop=loop)
@@ -165,16 +163,16 @@ class Session:
 
         if isinstance(value, RESOURCE_TYPES):
             if res_type and value.type != res_type:
-                raise TypeError(f'Invalid resource type {value.type}. '
-                                f'Should be {res_type}')
+                raise TypeError('Invalid resource type %s. '
+                                'Should be %s' % (value.type, res_type))
             elif res_types and value.type not in res_types:
-                raise TypeError(f'Invalid resource type {value.type}. '
-                                f'Should be one of {res_types}')
+                raise TypeError('Invalid resource type %s. '
+                                'Should be one of %s' % (value.type, res_types))
             return {'id': value.id, 'type': value.type}
         else:
             if not res_type:
                 raise ValueError('Use ResourceTuple to identify types '
-                                'if there are more than 1 type')
+                                 'if there are more than 1 type')
             return {'id': value, 'type': res_types[0]}
 
     def create(self, _type: str, **fields) -> 'ResourceObject':
@@ -185,8 +183,8 @@ class Session:
         from .objects import RESOURCE_TYPES
         from .resourceobject import ResourceObject
 
-        attrs: dict = {}
-        rels: dict = {}
+        attrs = {} # type: dict
+        rels = {} # type: dict
         schema = self.schema.schema_for_model(_type)
 
         for attr_name, value in fields.items():
@@ -273,7 +271,7 @@ class Session:
 
     @property
     def server_url(self) -> str:
-        return f'{self._server.scheme}://{self._server.netloc}'
+        return '%s://%s' % (self._server.scheme, self._server.netloc)
 
     @property
     def url_prefix(self) -> str:
@@ -282,9 +280,9 @@ class Session:
     def _url_for_resource(self, resource_type: str,
                           resource_id: str=None,
                           filter: 'Filter'=None) -> str:
-        url = f'{self.url_prefix}/{resource_type}'
+        url = '%s/%s' % (self.url_prefix, resource_type)
         if resource_id is not None:
-            url = f'{url}/{resource_id}'
+            url = '%s/%s' % (url, resource_id)
         if filter:
             url = filter.filtered_url(url)
         return url
@@ -342,7 +340,7 @@ class Session:
             -> 'AsyncIterator[ResourceObject]':
         doc = await self._get_async(resource_type, filter)
         async for res in doc._iterator_async():
-            yield res
+            raise NotImplemented #yield res
 
     def iterate(self, resource_type: str, filter: 'Filter'=None) \
             -> 'Union[AsyncIterator[ResourceObject], Iterator[ResourceObject]]':
@@ -460,8 +458,8 @@ class Session:
             return response.json()
         else:
 
-            raise DocumentError(f'Error {response.status_code}: '
-                                f'{error_from_response(response)}',
+            raise DocumentError('Error %s:%s' % (response.status_code,
+                                                 error_from_response(response)),
                                 errors={'status_code': response.status_code},
                                 response=response)
 
@@ -478,8 +476,8 @@ class Session:
             if response.status == HttpStatus.OK_200:
                 return await response.json(content_type='application/vnd.api+json')
             else:
-                raise DocumentError(f'Error {response.status_code}: '
-                                    f'{error_from_response(response)}',
+                raise DocumentError('Error %s:%s ' % (response.status_code,
+                                                      error_from_response(response)),
                                     errors={'status_code': response.status_code},
                                     response=response)
 
@@ -499,9 +497,9 @@ class Session:
                                     headers={'Content-Type': 'application/vnd.api+json'})
 
         if response.status_code not in expected_statuses:
-            raise DocumentError(f'Could not {http_method.upper()} '
-                                f'({response.status_code}): '
-                                f'{error_from_response(response)}',
+            raise DocumentError('Could not %s (%s): %s' % (http_method.upper(),
+                                                           response.status_code,
+                                                           error_from_response(response)),
                                 errors={'status_code': response.status_code},
                                 response=response,
                                 json_data=send_json)
@@ -531,9 +529,9 @@ class Session:
                     headers={'Content-Type': 'application/vnd.api+json'}) as response:
 
             if response.status not in expected_statuses:
-                raise DocumentError(f'Could not {http_method.upper()} '
-                                    f'({response.status}): '
-                                    f'{error_from_response(response)}',
+                raise DocumentError('Could not %s (%s)): %s' % (http_method.upper(),
+                                                                response.status,
+                                                                error_from_response(response)),
                                     errors={'status_code': response.status},
                                     response=response,
                                     json_data=send_json)
