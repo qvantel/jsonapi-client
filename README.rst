@@ -75,7 +75,6 @@ Filtering
    filter = Filter(some_dict__some_attr='something'))
    # - filtering manually with your server syntax.
    filter = Filter('filter[post]=1&filter[author]=2')
-   filter = Filter('filter=(EQ related-parties.role "customer")')
 
    # If you have different URL schema for filtering, you can implement your own Filter
    # class (derive it from Filter and reimplement format_filter_query).
