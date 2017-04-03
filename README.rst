@@ -243,8 +243,8 @@ Deleting resources
 Credits
 =======
 
-Work was funded by Qvantel Inc (http://qvantel.com)
-Responsible author and package maintainer: Tuomas Airaksinen
+Work was supported by Qvantel Inc (http://qvantel.com).
+Responsible author and package maintainer: Tuomas Airaksinen (https://github.com/tuomas2/).
 
 
 License
