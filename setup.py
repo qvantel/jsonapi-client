@@ -2,13 +2,13 @@ from setuptools import setup, find_packages
 
 setup(
     name="jsonapi_client",
-    version="0.9.2",
+    version="0.9.2-py35",
     description="Comprehensive, yet easy-to-use, pythonic, ORM-like access to JSON API services",
     long_description=(open("README.rst").read() + "\n" +
                       open("CHANGES.rst").read()),
     classifiers=[
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.5",
         "Topic :: Software Development :: Libraries",
         "License :: OSI Approved :: BSD License",
     ],
