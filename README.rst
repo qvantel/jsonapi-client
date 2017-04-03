@@ -240,7 +240,7 @@ Work was funded by Qvantel Inc (http://qvantel.com)
 Responsible author and package maintainer: Tuomas Airaksinen
 
 
-Licence
+License
 =======
 
 Copyright (c) 2017, Qvantel
