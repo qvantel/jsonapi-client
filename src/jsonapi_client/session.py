@@ -340,7 +340,7 @@ class Session:
             -> 'AsyncIterator[ResourceObject]':
         doc = await self._get_async(resource_type, filter)
         async for res in doc._iterator_async():
-            raise NotImplemented #yield res
+            raise NotImplementedError #yield res
 
     def iterate(self, resource_type: str, filter: 'Filter'=None) \
             -> 'Union[AsyncIterator[ResourceObject], Iterator[ResourceObject]]':
