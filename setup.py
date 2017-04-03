@@ -9,6 +9,8 @@ setup(
     classifiers=[
         "Programming Language :: Python",
         "Programming Language :: Python :: 3.6",
+        "Topic :: Software Development :: Libraries",
+        "License :: OSI Approved :: BSD License",
     ],
     author="Qvantel",
     author_email="tuomas.airaksinen@qvantel.com",
