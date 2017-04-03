@@ -1,3 +1,10 @@
+.. image:: https://travis-ci.org/qvantel/jsonapi-client.svg?branch=master
+    :target: https://travis-ci.org/qvantel/jsonapi-client
+
+.. image:: https://coveralls.io/repos/github/qvantel/jsonapi-client/badge.svg
+   :target: https://coveralls.io/github/qvantel/jsonapi-client
+
+
 ==========================
 JSON API client for Python
 ==========================
