@@ -9,3 +9,4 @@ aiodns
 sphinx
 sphinx-autodoc-annotation
 pytest-cov
+coveralls
