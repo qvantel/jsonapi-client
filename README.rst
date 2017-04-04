@@ -240,8 +240,8 @@ Deleting resources
 Credits
 =======
 
-Work was supported by Qvantel Inc (http://qvantel.com).
-Responsible author and package maintainer: Tuomas Airaksinen (https://github.com/tuomas2/).
+- Work was supported by Qvantel (http://qvantel.com).
+- Author and package maintainer: Tuomas Airaksinen (https://github.com/tuomas2/).
 
 
 License
