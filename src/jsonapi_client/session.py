@@ -244,10 +244,20 @@ class Session:
         logger.info('Entering session')
         return self
 
+    async def __aenter__(self):
+        logger.info('Entering session')
+        return self
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         logger.info('Exiting session')
         if not exc_type:
             self.commit()
+        self.close()
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        logger.info('Exiting session')
+        if not exc_type:
+            await self.commit()
         self.close()
 
     def close(self):

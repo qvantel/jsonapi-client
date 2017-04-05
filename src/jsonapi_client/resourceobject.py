@@ -550,7 +550,7 @@ class ResourceObject(AbstractJsonObject):
 
         url = self._pre_commit(url)
         status, result, location = self.session.http_request(self._http_method, url,
-                                                              self._commit_data(meta))
+                                                             self._commit_data(meta))
         return self._post_commit(status, result, location)
 
     def commit(self, custom_url: str = '', meta: dict = None) \

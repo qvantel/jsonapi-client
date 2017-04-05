@@ -547,6 +547,50 @@ def test_relationships_with_context_manager(mocked_fetch, api_schema):
     assert not s.documents_by_link
 
 
+@pytest.mark.asyncio
+async def test_relationships_with_context_manager_async_async(mocked_fetch, api_schema):
+    async with Session('http://localhost:8080/api', schema=api_schema, enable_async=True) as s:
+        documents = await s.get('leases')
+        d1 = documents.resources[0]
+
+        assert d1.lease_id is None
+        assert d1.id == 'qvantel-lease1'
+        assert d1.type == 'leases'
+        assert d1.active_status == d1.fields.active_status == 'active'
+        assert d1.valid_for.start_datetime == "2015-07-06T12:23:26.000Z"
+        assert d1['valid-for']['start-datetime'] == "2015-07-06T12:23:26.000Z"
+        assert d1.valid_for.meta.type == 'valid-for-datetime'
+        dird = dir(d1)
+        assert 'external_references' in dird
+
+        ext_refs = d1.external_references
+        ext_ref_res = (await ext_refs.fetch())[0]
+
+        assert ext_ref_res.reference_id == ext_ref_res.fields.reference_id == '0123015150'
+        assert ext_ref_res.id == 'qvantel-lease1-extref'
+        assert ext_ref_res.type == 'external-references'
+
+        assert isinstance(ext_ref_res, jsonapi_client.resourceobject.ResourceObject)
+
+        assert ext_ref_res.reference_id == '0123015150'
+        assert ext_ref_res.id == 'qvantel-lease1-extref'
+        assert ext_ref_res.type == 'external-references'
+
+        assert 'user_account' in dird
+        await d1.user_account.fetch()
+        assert d1.user_account.resource.id == 'qvantel-useraccount1'
+        assert d1.user_account.resource.type == 'user-accounts'
+        assert d1.links.self.href == '/api/leases/qvantel-lease1'
+
+        await d1.parent_lease.fetch()
+        parent_lease = d1.parent_lease.resource
+        assert parent_lease.active_status == 'active'
+
+    assert not s.resources_by_link
+    assert not s.resources_by_resource_identifier
+    assert not s.documents_by_link
+
+
 def test_more_relationships(mocked_fetch, api_schema):
     s = Session('http://localhost:8080/api', schema=api_schema)
     documents = s.get('leases')

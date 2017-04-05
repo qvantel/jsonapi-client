@@ -51,7 +51,12 @@ Client session
    # You can also use Session as a context manager. Changes are committed in the end
    # and session is closed.
    with Session(...) as s:
-       ...
+       your code
+
+   # Or with enable_async=True
+   async with Session(..., enable_async=True):
+       your code
+
    # If you are not using context manager, you need to close session manually
    s.close()
 
