@@ -241,20 +241,24 @@ class Session:
             return self._create_and_commit_sync(type_, **fields)
 
     def __enter__(self):
+        self.assert_sync()
         logger.info('Entering session')
         return self
 
     async def __aenter__(self):
+        self.assert_async()
         logger.info('Entering session')
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        self.assert_sync()
         logger.info('Exiting session')
         if not exc_type:
             self.commit()
         self.close()
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
+        self.assert_async()
         logger.info('Exiting session')
         if not exc_type:
             await self.commit()
@@ -500,7 +504,7 @@ class Session:
 
         Method to make PATCH/POST requests to server using requests library.
         """
-
+        self.assert_sync()
         import requests
         logger.debug('%s request: %s', http_method.upper(), send_json)
         expected_statuses = expected_statuses or HttpStatus.ALL_OK
