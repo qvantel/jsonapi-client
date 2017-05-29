@@ -7,6 +7,9 @@
 .. image:: https://img.shields.io/pypi/v/jsonapi-client.svg
    :target: https://pypi.python.org/pypi/jsonapi-client
 
+.. image:: https://img.shields.io/pypi/pyversions/jsonapi-client.svg
+   :target: https://pypi.python.org/pypi/jsonapi-client
+
 .. image:: https://img.shields.io/github/license/qvantel/jsonapi-client.svg
    :target: https://github.com/qvantel/jsonapi-client/blob/master/LICENSE.txt
 
