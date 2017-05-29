@@ -3,9 +3,7 @@
 
 .. image:: https://coveralls.io/repos/github/qvantel/jsonapi-client/badge.svg
    :target: https://coveralls.io/github/qvantel/jsonapi-client
-
 .. image:: https://img.shields.io/github/license/qvantel/jsonapi-client.svg
-
 .. image:: https://img.shields.io/pypi/v/jsonapi-client.svg
 
 
