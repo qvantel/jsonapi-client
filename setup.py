@@ -12,7 +12,7 @@ setup(
         "Topic :: Software Development :: Libraries",
         "License :: OSI Approved :: BSD License",
     ],
-    author="Qvantel",
+    author="Tuomas Airaksinen",
     author_email="tuomas.airaksinen@qvantel.com",
     url="https://github.com/qvantel/jsonapi-client",
     keywords="JSONAPI JSON API client",
@@ -22,7 +22,6 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        "setuptools",
         "requests",
         "jsonschema",
         "aiohttp",
