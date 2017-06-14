@@ -1,5 +1,5 @@
 """
-JSON API Python client 
+JSON API Python client
 https://github.com/qvantel/jsonapi-client
 
 (see JSON API specification in http://jsonapi.org/)
@@ -119,9 +119,12 @@ class Session:
     def __init__(self, server_url: str=None,
                  enable_async: bool=False,
                  schema: dict=None,
+                 auth: object=None,
                  loop: 'AbstractEventLoop'=None) -> None:
         self._server: ParseResult
         self.enable_async = enable_async
+
+        self.authObject = auth
 
         if server_url:
             self._server = urlparse(server_url)
@@ -364,7 +367,7 @@ class Session:
         Request (GET) Document from server and iterate through resources.
         If Document uses pagination, fetch results as long as there are new
         results.
-        
+
         If session is used with enable_async=True, this needs to iterated with
         async for.
 
@@ -469,7 +472,7 @@ class Session:
         import requests
         parsed_url = urlparse(url)
         logger.info('Fetching document from url %s', parsed_url)
-        response = requests.get(parsed_url.geturl())
+        response = requests.get(parsed_url.geturl(), auth=self.authObject)
         if response.status_code == HttpStatus.OK_200:
             return response.json()
         else:
@@ -510,7 +513,8 @@ class Session:
         expected_statuses = expected_statuses or HttpStatus.ALL_OK
 
         response = requests.request(http_method, url, json=send_json,
-                                    headers={'Content-Type': 'application/vnd.api+json'})
+                                    headers={'Content-Type': 'application/vnd.api+json'},
+                                    auth=self.authObject)
 
         if response.status_code not in expected_statuses:
             raise DocumentError(f'Could not {http_method.upper()} '
@@ -542,7 +546,7 @@ class Session:
         expected_statuses = expected_statuses or HttpStatus.ALL_OK
         content_type = '' if http_method == HttpMethod.DELETE else 'application/vnd.api+json'
         async with self._aiohttp_session.request(http_method, url, data=json.dumps(send_json),
-                    headers={'Content-Type': 'application/vnd.api+json'}) as response:
+                    headers={'Content-Type': 'application/vnd.api+json'}, auth=self.authObject) as response:
 
             if response.status not in expected_statuses:
                 raise DocumentError(f'Could not {http_method.upper()} '
