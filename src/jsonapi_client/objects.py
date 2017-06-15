@@ -73,6 +73,8 @@ class Link(AbstractJsonObject):
             else:
                 self.href = data['href']
                 self.meta = Meta(self.session, data.get('meta', {}))
+        else:
+            self.href = None
 
     def __eq__(self, other):
         return self.href == other.href
