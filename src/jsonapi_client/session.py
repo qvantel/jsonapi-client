@@ -126,7 +126,7 @@ class Session:
         self._server: ParseResult
         self.enable_async = enable_async
 
-        self.request_kwargs: dict = request_kwargs or {}
+        self._request_kwargs: dict = request_kwargs or {}
 
         if server_url:
             self._server = urlparse(server_url)
@@ -474,7 +474,7 @@ class Session:
         import requests
         parsed_url = urlparse(url)
         logger.info('Fetching document from url %s', parsed_url)
-        response = requests.get(parsed_url.geturl(), **self.request_kwargs)
+        response = requests.get(parsed_url.geturl(), **self._request_kwargs)
         if response.status_code == HttpStatus.OK_200:
             return response.json()
         else:
@@ -494,7 +494,7 @@ class Session:
         parsed_url = urlparse(url)
         logger.info('Fetching document from url %s', parsed_url)
         async with self._aiohttp_session.get(parsed_url.geturl(),
-                                             **self.request_kwargs) as response:
+                                             **self._request_kwargs) as response:
             if response.status == HttpStatus.OK_200:
                 return await response.json(content_type='application/vnd.api+json')
             else:
@@ -517,7 +517,7 @@ class Session:
 
         response = requests.request(http_method, url, json=send_json,
                                     headers={'Content-Type': 'application/vnd.api+json'},
-                                    **self.request_kwargs)
+                                    **self._request_kwargs)
 
         if response.status_code not in expected_statuses:
             raise DocumentError(f'Could not {http_method.upper()} '
@@ -551,7 +551,7 @@ class Session:
         async with self._aiohttp_session.request(
                 http_method, url, data=json.dumps(send_json),
                 headers={'Content-Type':'application/vnd.api+json'},
-                **self.request_kwargs) as response:
+                **self._request_kwargs) as response:
 
             if response.status not in expected_statuses:
                 raise DocumentError(f'Could not {http_method.upper()} '
