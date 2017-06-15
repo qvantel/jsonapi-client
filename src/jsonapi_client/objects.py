@@ -67,14 +67,13 @@ class Link(AbstractJsonObject):
     http://jsonapi.org/format/#document-links
     """
     def _handle_data(self, data):
-        if data is not None:
+        if data:
             if isinstance(data, str):
                 self.href = data
             else:
                 self.href = data['href']
                 self.meta = Meta(self.session, data.get('meta', {}))
-        else:
-            self.href = None
+        self.href = ''
 
     def __eq__(self, other):
         return self.href == other.href
