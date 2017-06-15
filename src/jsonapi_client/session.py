@@ -124,7 +124,7 @@ class Session:
         self._server: ParseResult
         self.enable_async = enable_async
 
-        self.authObject = auth
+        self.auth_object = auth
 
         if server_url:
             self._server = urlparse(server_url)
@@ -472,7 +472,7 @@ class Session:
         import requests
         parsed_url = urlparse(url)
         logger.info('Fetching document from url %s', parsed_url)
-        response = requests.get(parsed_url.geturl(), auth=self.authObject)
+        response = requests.get(parsed_url.geturl(), auth=self.auth_object)
         if response.status_code == HttpStatus.OK_200:
             return response.json()
         else:
@@ -514,7 +514,7 @@ class Session:
 
         response = requests.request(http_method, url, json=send_json,
                                     headers={'Content-Type': 'application/vnd.api+json'},
-                                    auth=self.authObject)
+                                    auth=self.auth_object)
 
         if response.status_code not in expected_statuses:
             raise DocumentError(f'Could not {http_method.upper()} '
@@ -546,7 +546,7 @@ class Session:
         expected_statuses = expected_statuses or HttpStatus.ALL_OK
         content_type = '' if http_method == HttpMethod.DELETE else 'application/vnd.api+json'
         async with self._aiohttp_session.request(http_method, url, data=json.dumps(send_json),
-                    headers={'Content-Type': 'application/vnd.api+json'}, auth=self.authObject) as response:
+                    headers={'Content-Type': 'application/vnd.api+json'}, auth=self.auth_object) as response:
 
             if response.status not in expected_statuses:
                 raise DocumentError(f'Could not {http_method.upper()} '
