@@ -114,17 +114,19 @@ class Session:
     :param server_url: Server base url
     :param enable_async: Toggle AsyncIO mode for session
     :param schema: Schema in jsonschema format. See example from :ref:`usage-schema`.
+    :param request_kwargs: Additional keyword arguments that are passed to requests.request or
+        aiohttp.request functions (such as authentication object)
 
     """
     def __init__(self, server_url: str=None,
                  enable_async: bool=False,
                  schema: dict=None,
-                 auth: object=None,
+                 request_kwargs: dict=None,
                  loop: 'AbstractEventLoop'=None) -> None:
         self._server: ParseResult
         self.enable_async = enable_async
 
-        self.auth_object = auth
+        self.request_kwargs: dict = request_kwargs or {}
 
         if server_url:
             self._server = urlparse(server_url)
@@ -472,7 +474,7 @@ class Session:
         import requests
         parsed_url = urlparse(url)
         logger.info('Fetching document from url %s', parsed_url)
-        response = requests.get(parsed_url.geturl(), auth=self.auth_object)
+        response = requests.get(parsed_url.geturl(), **self.request_kwargs)
         if response.status_code == HttpStatus.OK_200:
             return response.json()
         else:
@@ -491,7 +493,8 @@ class Session:
         self.assert_async()
         parsed_url = urlparse(url)
         logger.info('Fetching document from url %s', parsed_url)
-        async with self._aiohttp_session.get(parsed_url.geturl()) as response:
+        async with self._aiohttp_session.get(parsed_url.geturl(),
+                                             **self.request_kwargs) as response:
             if response.status == HttpStatus.OK_200:
                 return await response.json(content_type='application/vnd.api+json')
             else:
@@ -514,7 +517,7 @@ class Session:
 
         response = requests.request(http_method, url, json=send_json,
                                     headers={'Content-Type': 'application/vnd.api+json'},
-                                    auth=self.auth_object)
+                                    **self.request_kwargs)
 
         if response.status_code not in expected_statuses:
             raise DocumentError(f'Could not {http_method.upper()} '
@@ -545,8 +548,10 @@ class Session:
         logger.debug('%s request: %s', http_method.upper(), send_json)
         expected_statuses = expected_statuses or HttpStatus.ALL_OK
         content_type = '' if http_method == HttpMethod.DELETE else 'application/vnd.api+json'
-        async with self._aiohttp_session.request(http_method, url, data=json.dumps(send_json),
-                    headers={'Content-Type': 'application/vnd.api+json'}, auth=self.auth_object) as response:
+        async with self._aiohttp_session.request(
+                http_method, url, data=json.dumps(send_json),
+                headers={'Content-Type':'application/vnd.api+json'},
+                **self.request_kwargs) as response:
 
             if response.status not in expected_statuses:
                 raise DocumentError(f'Could not {http_method.upper()} '

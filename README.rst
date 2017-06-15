@@ -56,6 +56,12 @@ Client session
    # To start session in async mode
    s = Session('http://localhost:8080/', enable_async=True)
 
+   # You can also pass extra arguments that are passed directly to requests or aiohttp methods,
+   # such as authentication object
+   s = Session('http://localhost:8080/',
+               request_kwargs=dict(auth=HttpBasicAuth('user', 'password'))
+
+
    # You can also use Session as a context manager. Changes are committed in the end
    # and session is closed.
    with Session(...) as s:
@@ -250,26 +256,6 @@ Deleting resources
     cust1.delete() # Mark to be deleted
     cust1.commit() # Actually delete
 
-Authentication
---------------
-
-Authentication is based on `requests.request` method, adding a callback to each request.
-
-.. code-block:: python
-
-    class authenticator:
-        def __init__(self, username, password):
-            self.username = username
-            self.password = password
-
-        def __call__(self, r):
-            r.headers['Authorization'] = '%s:%s' % (self.username,
-                self.password)
-            return r
-
-    s = Session(server_url, auth=authenticator('username', 'password'))
-
-For more info please check http://docs.python-requests.org/en/master/user/authentication/
 
 Credits
 =======
