@@ -182,7 +182,7 @@ class Session:
                                 'if there are more than 1 type')
             return {'id': value, 'type': res_types[0]}
 
-    def create(self, _type: str, fields: dict=None, **kwargs) -> 'ResourceObject':
+    def create(self, _type: str, fields: dict=None, **more_fields) -> 'ResourceObject':
         """
         Create a new ResourceObject of model _type. This requires that schema is defined
         for model.
@@ -200,9 +200,9 @@ class Session:
         attrs: dict = {}
         rels: dict = {}
         schema = self.schema.schema_for_model(_type)
-        kwargs.update(fields)
+        more_fields.update(fields)
 
-        for key, value in kwargs.items():
+        for key, value in more_fields.items():
             if key not in fields:
                 key = jsonify_attribute_name(key)
             props = schema['properties'].get(key, {})
@@ -231,17 +231,17 @@ class Session:
         res = ResourceObject(self, data)
         return res
 
-    def _create_and_commit_sync(self, type_: str, **fields) -> 'ResourceObject':
-        res = self.create(type_, **fields)
+    def _create_and_commit_sync(self, type_: str, fields: dict=None, **more_fields) -> 'ResourceObject':
+        res = self.create(type_, fields, **more_fields)
         res.commit()
         return res
 
-    async def _create_and_commit_async(self, type_: str, **fields) -> 'ResourceObject':
-        res = self.create(type_, **fields)
+    async def _create_and_commit_async(self, type_: str, fields: dict=None, **more_fields) -> 'ResourceObject':
+        res = self.create(type_, fields, **more_fields)
         await res.commit()
         return res
 
-    def create_and_commit(self, type_: str, **fields) \
+    def create_and_commit(self, type_: str, fields: dict=None, **more_fields) \
             -> 'Union[Awaitable[ResourceObject], ResourceObject]':
         """
         Create resource and commit (PUSH) it into server.
@@ -250,9 +250,9 @@ class Session:
         """
 
         if self.enable_async:
-            return self._create_and_commit_async(type_, **fields)
+            return self._create_and_commit_async(type_, fields, **more_fields)
         else:
-            return self._create_and_commit_sync(type_, **fields)
+            return self._create_and_commit_sync(type_, fields, **more_fields)
 
     def __enter__(self):
         self.assert_sync()
