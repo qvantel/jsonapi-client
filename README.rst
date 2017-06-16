@@ -232,20 +232,24 @@ Creating new resources
    await s.commit()
 
    # Another example of resource creation, setting attributes and relationships & committing:
+   # If you have underscores in your field names, you can pass them in fields keyword argument as
+   # a dictionary:
    cust1 = s.create_and_commit('articles',
                                attribute='1',
                                dict_object__attribute='2',
                                to_one_relationship='3',
                                to_many_relationship=['1', '2'],
+                               fields={'some_field_with_underscore': '1'}
                                )
 
-
-    # Async:
+   # Async:
    cust1 = await s.create_and_commit('articles',
                                      attribute='1',
                                      dict_object__attribute='2',
                                      to_one_relationship='3',
-                                     to_many_relationship=['1', '2'])
+                                     to_many_relationship=['1', '2'],
+                                     fields={'some_field_with_underscore': '1'}
+                                     )
 
 Deleting resources
 ------------------

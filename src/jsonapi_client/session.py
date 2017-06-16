@@ -182,20 +182,29 @@ class Session:
                                 'if there are more than 1 type')
             return {'id': value, 'type': res_types[0]}
 
-    def create(self, _type: str, **fields) -> 'ResourceObject':
+    def create(self, _type: str, fields: dict=None, **kwargs) -> 'ResourceObject':
         """
         Create a new ResourceObject of model _type. This requires that schema is defined
         for model.
+
+        If you have field names that have underscores, you can pass those fields
+        in fields dictionary.
+
         """
         from .objects import RESOURCE_TYPES
         from .resourceobject import ResourceObject
 
+        if fields is None:
+            fields = {}
+
         attrs: dict = {}
         rels: dict = {}
         schema = self.schema.schema_for_model(_type)
+        kwargs.update(fields)
 
-        for attr_name, value in fields.items():
-            key = jsonify_attribute_name(attr_name)
+        for key, value in kwargs.items():
+            if key not in fields:
+                key = jsonify_attribute_name(key)
             props = schema['properties'].get(key, {})
             if 'relation' in props:
                 res_types = props['resource']
