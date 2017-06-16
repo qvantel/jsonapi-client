@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="jsonapi_client",
-    version='0.9.5',
+    version='0.9.6.dev0',
     description="Comprehensive, yet easy-to-use, pythonic, ORM-like access to JSON API services",
     long_description=(open("README.rst").read() + "\n" +
                       open("CHANGES.rst").read()),
