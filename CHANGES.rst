@@ -1,7 +1,7 @@
 CHANGELOG
 =========
 
-0.9.5 (unreleased)
+0.9.5 (2017-06-16)
  - Change Session.create_and_commit signature similarly as Session.create
 
 0.9.4 (2017-06-16)
