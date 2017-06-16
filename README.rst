@@ -56,6 +56,12 @@ Client session
    # To start session in async mode
    s = Session('http://localhost:8080/', enable_async=True)
 
+   # You can also pass extra arguments that are passed directly to requests or aiohttp methods,
+   # such as authentication object
+   s = Session('http://localhost:8080/',
+               request_kwargs=dict(auth=HttpBasicAuth('user', 'password'))
+
+
    # You can also use Session as a context manager. Changes are committed in the end
    # and session is closed.
    with Session(...) as s:
@@ -249,6 +255,7 @@ Deleting resources
     # Delete resource
     cust1.delete() # Mark to be deleted
     cust1.commit() # Actually delete
+
 
 Credits
 =======
