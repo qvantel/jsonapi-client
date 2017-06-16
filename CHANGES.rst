@@ -16,6 +16,12 @@ CHANGELOG
 [2017-xx-xx] 0.9.4
  - AsyncIO support for context manager usage of Session
 
+0.9.5 (unreleased)
+                  
+
+- Nothing changed yet.
+
+
 0.9.4 (2017-06-16)
  - Remove ? from filenames (illegal in Windows)
  - Pass event loop aiohttp's ClientSession
