@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+0.9.7 (unreleased)
+------------------
+
+- Nothing changed yet.
+
+
 0.9.6 (2017-06-26)
 - When creating new resources, use default value specified in
   jsonschema, when available.
