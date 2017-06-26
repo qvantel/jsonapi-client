@@ -132,16 +132,6 @@ article_schema_simple = \
         'articles': articles,
     }
 
-underscore_schema = \
-    {
-        'articles': {
-            'properties': {
-                'with_underscore': {'type': 'string'},
-                'with-dash': {'type': 'string'},
-            }
-        }
-    }
-
 
 @pytest.fixture(scope='function', params=[None, article_schema_simple,
                                           article_schema_all])
@@ -1036,6 +1026,43 @@ def test_posting_successfull_with_predefined_fields(kw_format, commit, mock_req,
 
     mock_req.assert_called_once_with('post', 'http://localhost:80801/api/leases',
                                      agr_data)
+
+
+def test_create_with_default(mock_req):
+    test_schema = \
+        {
+            'articles': {
+                'properties': {
+                    'testfield1': {'type': 'string', 'default': 'default'},
+                    'testfield2': {'type': 'string', 'default': 'default'},
+                }
+            }
+        }
+
+    s = Session('http://localhost:8080/', schema=test_schema)
+    a = s.create('articles', fields={'testfield1': 'test', 'testfield2': 'test'})
+    assert a.testfield1 == 'test'
+    assert a.testfield2 == 'test'
+
+    with mock.patch('jsonapi_client.session.Session.read'):
+        a.commit()
+
+    a2 = s.create('articles', fields={'testfield1': 'test'})
+    assert a2.testfield1 == 'test'
+    assert a2.testfield2 == 'default'
+
+    with mock.patch('jsonapi_client.session.Session.read'):
+        a2.commit()
+
+underscore_schema = \
+    {
+        'articles': {
+            'properties': {
+                'with_underscore': {'type': 'string'},
+                'with-dash': {'type': 'string'},
+            }
+        }
+    }
 
 
 def test_create_with_underscore(mock_req):

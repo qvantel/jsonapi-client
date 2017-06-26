@@ -86,21 +86,21 @@ class AttributeDict(dict):
 
         # If there's schema for this object, we will use it to construct object.
         if specification:
-            for key, value in specification['properties'].items():
-                if value.get('type') == 'object':
-                    _data = data.pop(key, {})
-                    self[key] = AttributeDict(data=_data,
-                                              name=key,
-                                              parent=self,
-                                              resource=resource)
-                elif 'relation' in value:
+            for field_name, field_spec in specification['properties'].items():
+                if field_spec.get('type') == 'object':
+                    _data = data.pop(field_name, {})
+                    self[field_name] = AttributeDict(data=_data,
+                                                     name=field_name,
+                                                     parent=self,
+                                                     resource=resource)
+                elif 'relation' in field_spec:
                     pass  # Special handling for relationships
                 else:
-                    self[key] = data.pop(key, None)
+                    self[field_name] = data.pop(field_name, field_spec.get('default'))
+
             if data:
                 logger.warning('There was extra data (not specified in schema): %s',
                                data)
-
         # If not, we will use the source data as it is.
         self.update(data)
         for key, value in data.items():
