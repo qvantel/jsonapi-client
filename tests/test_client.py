@@ -507,6 +507,13 @@ def test_relationships_with_context_manager(mocked_fetch, api_schema):
         assert d1.valid_for.start_datetime == "2015-07-06T12:23:26.000Z"
         assert d1['valid-for']['start-datetime'] == "2015-07-06T12:23:26.000Z"
         assert d1.valid_for.meta.type == 'valid-for-datetime'
+        with pytest.raises(AttributeError):
+            d1.valid_for.meta.with_underscore
+
+        assert d1.valid_for.meta['with_underscore'] == 'underscore'
+        assert d1.valid_for.meta.with_dash == 'dash'
+
+        # == 'valid-for-datetime'
         dird = dir(d1)
         assert 'external_references' in dird
 

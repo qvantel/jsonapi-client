@@ -56,6 +56,9 @@ class Meta(AbstractJsonObject):
     def __getattr__(self, name):
         return self.meta.get(jsonify_attribute_name(name))
 
+    def __getitem__(self, name):
+        return self.meta.get(name)
+
     def __str__(self):
         return str(self.meta)
 
