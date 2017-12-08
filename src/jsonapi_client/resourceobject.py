@@ -529,7 +529,7 @@ class ResourceObject(AbstractJsonObject):
         # is received for PATCH, for example).
         self.mark_clean()
 
-        if status == HttpStatus.ACCEPTED_202:
+        if status == HttpStatus.CREATED_201:
             return self.session.read(result, location, no_cache=True).resource
 
     async def _commit_async(self, url: str= '', meta=None) -> None:
