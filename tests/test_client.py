@@ -297,6 +297,17 @@ def test_relationships_single(mocked_fetch, article_schema):
     assert article2.comment_or_author.type == 'people'
     assert article2.comment_or_author.first_name == 'Dan' \
 
+
+@pytest.mark.asyncio
+async def test_relationships_iterator(mocked_fetch, article_schema):
+    s = Session('http://localhost:8080', enable_async=True, schema=article_schema, return_link_relationship_as_iterator=True)
+    doc = await s.get('articles')
+    article, article2 = doc.resources
+    comments = article.comments
+    assert isinstance(comments, jsonapi_client.relationships.MultiRelationship)
+    assert len(comments._resource_identifiers) == 2
+
+
 @pytest.mark.asyncio
 async def test_relationships_single_async(mocked_fetch, article_schema):
     s = Session('http://localhost:8080', enable_async=True, schema=article_schema)
