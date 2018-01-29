@@ -123,7 +123,7 @@ class Session:
                  schema: dict=None,
                  request_kwargs: dict=None,
                  loop: 'AbstractEventLoop'=None,
-                 return_link_relationship_as_iterator: bool=False,) -> None:
+                 use_relationship_iterator: bool=False,) -> None:
         self._server: ParseResult
         self.enable_async = enable_async
 
@@ -142,7 +142,7 @@ class Session:
         if enable_async:
             import aiohttp
             self._aiohttp_session = aiohttp.ClientSession(loop=loop)
-        self.return_link_relationship_as_iterator = return_link_relationship_as_iterator
+        self.use_relationship_iterator = use_relationship_iterator
 
     def add_resources(self, *resources: 'ResourceObject') -> None:
         """
