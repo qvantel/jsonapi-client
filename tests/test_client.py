@@ -299,8 +299,8 @@ def test_relationships_single(mocked_fetch, article_schema):
 
 
 @pytest.mark.asyncio
-async def test_relationships_iterator(mocked_fetch, article_schema):
-    s = Session('http://localhost:8080', enable_async=True, schema=article_schema, return_link_relationship_as_iterator=True)
+async def test_relationships_iterator_async(mocked_fetch, article_schema):
+    s = Session('http://localhost:8080', enable_async=True, schema=article_schema, use_relationship_iterator=True)
     doc = await s.get('articles')
     article, article2 = doc.resources
     comments = article.comments

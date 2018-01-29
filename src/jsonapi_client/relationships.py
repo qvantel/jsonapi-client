@@ -370,7 +370,7 @@ class LinkRelationship(AbstractRelationship):
         self.session.assert_async()
         self._document = \
             await self.session.fetch_document_by_url_async(self.links.related.url)
-        if self.session.return_link_relationship_as_iterator:
+        if self.session.use_relationship_iterator:
             return self._document.iterator()
         self._resources = {(r.type, r.id): r for r in self._document.resources}
         return list(self._resources.values())
@@ -378,7 +378,7 @@ class LinkRelationship(AbstractRelationship):
     def _fetch_sync(self) -> 'List[ResourceObject]':
         self.session.assert_sync()
         self._document = self.session.fetch_document_by_url(self.links.related.url)
-        if self.session.return_link_relationship_as_iterator:
+        if self.session.use_relationship_iterator:
             return self._document.iterator()
         self._resources = {(r.type, r.id): r for r in self._document.resources}
         return list(self._resources.values())
