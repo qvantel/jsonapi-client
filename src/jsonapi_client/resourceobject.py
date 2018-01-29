@@ -276,15 +276,14 @@ class RelationshipDict(dict):
         """
         from . import relationships as rel
         relationship_data = data.get('data')
-        if relationship_data:
-            if isinstance(relationship_data, list):
-                if not (not relation_type or relation_type == RelationType.TO_MANY):
-                    logger.error('Conflicting information about relationship')
-                return rel.MultiRelationship
-            else:
-                if not(not relation_type or relation_type == RelationType.TO_ONE):
-                    logger.error('Conflicting information about relationship')
-                return rel.SingleRelationship
+        if isinstance(relationship_data, list):
+            if not (not relation_type or relation_type == RelationType.TO_MANY):
+                logger.error('Conflicting information about relationship')
+            return rel.MultiRelationship
+        elif relationship_data:
+            if not(not relation_type or relation_type == RelationType.TO_ONE):
+                logger.error('Conflicting information about relationship')
+            return rel.SingleRelationship
         elif 'links' in data:
             return rel.LinkRelationship
         elif 'meta' in data:
