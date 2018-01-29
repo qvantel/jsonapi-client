@@ -370,14 +370,12 @@ class LinkRelationship(AbstractRelationship):
         self.session.assert_async()
         self._document = \
             await self.session.fetch_document_by_url_async(self.links.related.url)
-        self._resources = {(r.type, r.id): r for r in self._document.resources}
-        return list(self._resources.values())
+        return self._document.iterator()
 
     def _fetch_sync(self) -> 'List[ResourceObject]':
         self.session.assert_sync()
         self._document = self.session.fetch_document_by_url(self.links.related.url)
-        self._resources = {(r.type, r.id): r for r in self._document.resources}
-        return list(self._resources.values())
+        return self._document.iterator()
 
     def mark_clean(self):
         self._is_dirty = False
