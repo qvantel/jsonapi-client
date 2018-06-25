@@ -43,7 +43,7 @@ logger = logging.getLogger(__name__)
 R_IDENT_TYPES = Union[str, ResourceObject, ResourceIdentifier, ResourceTuple]
 
 if TYPE_CHECKING:
-    from .filter import Filter
+    from .filter import Modifier
     from .document import Document
     from .session import Session
 
@@ -79,24 +79,24 @@ class AbstractRelationship(AbstractJsonObject):
     def is_single(self) -> bool:
         raise NotImplementedError
 
-    def _filter_sync(self, filter: 'Filter') -> 'Document':
-        url = filter.filtered_url(self.url)
+    def _modify_sync(self, modifier: 'Modifier') -> 'Document':
+        url = modifier.url_with_modifiers(self.url)
         return self.session.fetch_document_by_url(url)
 
-    async def _filter_async(self, filter_obj: 'Filter'):
-        url = filter_obj.filtered_url(self.url)
+    async def _modify_async(self, modifier: 'Modifier'):
+        url = modifier.url_with_modifiers(self.url)
         return self.session.fetch_document_by_url_async(url)
 
-    def filter(self, filter: 'Filter') -> 'Union[Awaitable[Document], Document]':
+    def filter(self, filter: 'Modifier') -> 'Union[Awaitable[Document], Document]':
         """
-        Receive filtered list of resources. Use Filter instance.
+        Receive filtered list of resources. Use Modifier instance.
 
         If in async mode, this needs to be awaited.
         """
         if self.session.enable_async:
-            return self._filter_async(filter)
+            return self._modify_async(filter)
         else:
-            return self._filter_sync(filter)
+            return self._modify_sync(filter)
 
     @property
     def is_dirty(self) -> bool:

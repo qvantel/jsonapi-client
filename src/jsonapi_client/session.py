@@ -50,7 +50,7 @@ if TYPE_CHECKING:
     from .document import Document
     from .resourceobject import ResourceObject
     from .relationships import ResourceTuple
-    from .filter import Filter
+    from .filter import Modifier
 
 logger = logging.getLogger(__name__)
 NOT_FOUND = object()
@@ -311,20 +311,20 @@ class Session:
 
     def _url_for_resource(self, resource_type: str,
                           resource_id: str=None,
-                          filter: 'Filter'=None) -> str:
+                          filter: 'Modifier'=None) -> str:
         url = f'{self.url_prefix}/{resource_type}'
         if resource_id is not None:
             url = f'{url}/{resource_id}'
         if filter:
-            url = filter.filtered_url(url)
+            url = filter.url_with_modifiers(url)
         return url
 
     @staticmethod
     def _resource_type_and_filter(
-                resource_id_or_filter: 'Union[Filter, str]'=None)\
-            -> 'Tuple[Optional[str], Optional[Filter]]':
-        from .filter import Filter
-        if isinstance(resource_id_or_filter, Filter):
+                resource_id_or_filter: 'Union[Modifier, str]'=None)\
+            -> 'Tuple[Optional[str], Optional[Modifier]]':
+        from .filter import Modifier
+        if isinstance(resource_id_or_filter, Modifier):
             resource_id = None
             filter = resource_id_or_filter
         else:
@@ -333,26 +333,26 @@ class Session:
         return resource_id, filter
 
     def _get_sync(self, resource_type: str,
-                  resource_id_or_filter: 'Union[Filter, str]'=None) -> 'Document':
+                  resource_id_or_filter: 'Union[Modifier, str]'=None) -> 'Document':
         resource_id, filter_ = self._resource_type_and_filter(
                                                                 resource_id_or_filter)
         url = self._url_for_resource(resource_type, resource_id, filter_)
         return self.fetch_document_by_url(url)
 
     async def _get_async(self, resource_type: str,
-                         resource_id_or_filter: 'Union[Filter, str]'=None) -> 'Document':
+                         resource_id_or_filter: 'Union[Modifier, str]'=None) -> 'Document':
         resource_id, filter_ = self._resource_type_and_filter(
                                                                 resource_id_or_filter)
         url = self._url_for_resource(resource_type, resource_id, filter_)
         return await self.fetch_document_by_url_async(url)
 
     def get(self, resource_type: str,
-                 resource_id_or_filter: 'Union[Filter, str]'=None) \
+                 resource_id_or_filter: 'Union[Modifier, str]'=None) \
             -> 'Union[Awaitable[Document], Document]':
         """
         Request (GET) Document from server.
 
-        :param resource_id_or_filter: Resource id or Filter instance to filter
+        :param resource_id_or_filter: Resource id or Modifier instance to filter
         resulting resources.
 
         If session is used with enable_async=True, this needs
@@ -363,18 +363,18 @@ class Session:
         else:
             return self._get_sync(resource_type, resource_id_or_filter)
 
-    def _iterate_sync(self, resource_type: str, filter: 'Filter'=None) \
+    def _iterate_sync(self, resource_type: str, filter: 'Modifier'=None) \
             -> 'Iterator[ResourceObject]':
         doc = self.get(resource_type, filter)
         yield from doc._iterator_sync()
 
-    async def _iterate_async(self, resource_type: str, filter: 'Filter'=None) \
+    async def _iterate_async(self, resource_type: str, filter: 'Modifier'=None) \
             -> 'AsyncIterator[ResourceObject]':
         doc = await self._get_async(resource_type, filter)
         async for res in doc._iterator_async():
             yield res
 
-    def iterate(self, resource_type: str, filter: 'Filter'=None) \
+    def iterate(self, resource_type: str, filter: 'Modifier'=None) \
             -> 'Union[AsyncIterator[ResourceObject], Iterator[ResourceObject]]':
         """
         Request (GET) Document from server and iterate through resources.
@@ -384,7 +384,7 @@ class Session:
         If session is used with enable_async=True, this needs to iterated with
         async for.
 
-        :param filter: Filter instance to filter resulting resources.
+        :param filter: Modifier instance to filter resulting resources.
         """
         if self.enable_async:
             return self._iterate_async(resource_type, filter)
