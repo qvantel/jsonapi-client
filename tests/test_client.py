@@ -235,7 +235,7 @@ async def test_initialization_async(mocked_fetch, article_schema):
 def test_basic_attributes(mocked_fetch, article_schema):
     s = Session('http://localhost:8080', schema=article_schema)
     doc = s.get('articles')
-    assert len(doc.resources) == 2
+    assert len(doc.resources) == 3
     article = doc.resources[0]
     assert article.id == "1"
     assert article.type == "articles"
@@ -253,7 +253,7 @@ def test_basic_attributes(mocked_fetch, article_schema):
 async def test_basic_attributes_async(mocked_fetch, article_schema):
     s = Session('http://localhost:8080', enable_async=True, schema=article_schema)
     doc = await s.get('articles')
-    assert len(doc.resources) == 2
+    assert len(doc.resources) == 3
     article = doc.resources[0]
     assert article.id == "1"
     assert article.type == "articles"
@@ -272,7 +272,7 @@ async def test_basic_attributes_async(mocked_fetch, article_schema):
 
 def test_relationships_single(mocked_fetch, article_schema):
     s = Session('http://localhost:8080', schema=article_schema)
-    article, article2 = s.get('articles').resources
+    article, article2, article3 = s.get('articles').resources
     author = article.author
     assert {i for i in dir(author.fields) if not i.startswith('_')} \
              == {'first_name', 'last_name', 'twitter'}
@@ -295,14 +295,17 @@ def test_relationships_single(mocked_fetch, article_schema):
 
     assert article2.comment_or_author.id == '9'
     assert article2.comment_or_author.type == 'people'
-    assert article2.comment_or_author.first_name == 'Dan' \
+    assert article2.comment_or_author.first_name == 'Dan'
+
+    assert article3.author is None
+    assert article3.comment_or_author is None
 
 
 @pytest.mark.asyncio
 async def test_relationships_iterator_async(mocked_fetch, article_schema):
     s = Session('http://localhost:8080', enable_async=True, schema=article_schema, use_relationship_iterator=True)
     doc = await s.get('articles')
-    article, article2 = doc.resources
+    article, article2, article3 = doc.resources
     comments = article.comments
     assert isinstance(comments, jsonapi_client.relationships.MultiRelationship)
     assert len(comments._resource_identifiers) == 2
@@ -312,7 +315,7 @@ async def test_relationships_iterator_async(mocked_fetch, article_schema):
 async def test_relationships_single_async(mocked_fetch, article_schema):
     s = Session('http://localhost:8080', enable_async=True, schema=article_schema)
     doc = await s.get('articles')
-    article, article2 = doc.resources
+    article, article2, article3 = doc.resources
 
     author = article.author
     assert isinstance(author, jsonapi_client.relationships.SingleRelationship)
@@ -345,11 +348,16 @@ async def test_relationships_single_async(mocked_fetch, article_schema):
     assert article2.comment_or_author.resource.id == '9'
     assert article2.comment_or_author.resource.type == 'people'
     assert article2.comment_or_author.resource.first_name == 'Dan'
+
+    await article3.author.fetch()
+    await article3.comment_or_author.fetch()
+    assert article3.author.resource is None
+    assert article3.comment_or_author.resource is None
     s.close()
 
 def test_relationships_multi(mocked_fetch, article_schema):
     s = Session('http://localhost:8080', schema=article_schema)
-    article, article2 = s.get('articles').resources
+    article, article2, article3 = s.get('articles').resources
     comments = article.comments
     assert len(comments) == 2
     c1, c2 = comments
@@ -424,11 +432,11 @@ def test_fetch_external_resources(mocked_fetch, article_schema):
     session = article.session
     c1, c2 = comments
     assert c1.body == "First!"
-    assert len(session.resources_by_resource_identifier) == 5
+    assert len(session.resources_by_resource_identifier) == 6
     assert len(session.resources_by_link) == 5
     assert len(session.documents_by_link) == 1
     assert c1.author.id == "2"
-    assert len(session.resources_by_resource_identifier) == 6
+    assert len(session.resources_by_resource_identifier) == 7
     assert len(session.resources_by_link) == 6
     assert len(session.documents_by_link) == 2
 
@@ -449,7 +457,7 @@ async def test_fetch_external_resources_async(mocked_fetch, article_schema):
     session = article.session
     c1, c2 = await comments.fetch()
     assert c1.body == "First!"
-    assert len(session.resources_by_resource_identifier) == 5
+    assert len(session.resources_by_resource_identifier) == 6
     assert len(session.resources_by_link) == 5
     assert len(session.documents_by_link) == 1
 
@@ -459,7 +467,7 @@ async def test_fetch_external_resources_async(mocked_fetch, article_schema):
     # fetch external content
     c1_author = c1.author.resource
     assert c1_author.id == "2"
-    assert len(session.resources_by_resource_identifier) == 6
+    assert len(session.resources_by_resource_identifier) == 7
     assert len(session.resources_by_link) == 6
     assert len(session.documents_by_link) == 2
 
@@ -947,6 +955,8 @@ def make_patch_json(ids, type_, field_name=None):
             content = {'data': [{'id': str(i), 'type': str(j)} for i, j in ids]}
         else:
             content = {'data': [{'id': str(i), 'type': type_} for i in ids]}
+    elif ids is None:
+        content = {'data': None}
     else:
         content = {'data': {'id': str(ids), 'type': type_}}
 
@@ -1122,6 +1132,21 @@ def test_posting_relationships(mock_req, article_schema):
         a.commit()
 
 
+def test_posting_with_null_to_one_relationship(mock_req, article_schema):
+    if not article_schema:
+        return
+
+    s = Session('http://localhost:8080/', schema=article_schema)
+    a = s.create('articles',
+            title='Test article',
+            comments=[],
+            author=None,
+            comments_or_authors=[]
+    )
+    with mock.patch('jsonapi_client.session.Session.read'):
+        a.commit()
+
+
 def test_posting_successfull_without_schema(mock_req):
     s = Session('http://localhost:80801/api')
     a = s.create('leases')
@@ -1183,7 +1208,7 @@ def test_posting_post_validation_error():
 
 def test_relationship_manipulation(mock_req, article_schema, mocked_fetch, mock_update_resource):
     s = Session('http://localhost:80801/', schema=article_schema)
-    article, article2 = s.get('articles').resources
+    article, article2, article3 = s.get('articles').resources
     assert article.relationships.author.resource.id == '9'
     if article_schema:
         assert article.relationships.author.type == 'people'
@@ -1289,6 +1314,13 @@ def test_relationship_manipulation(mock_req, article_schema, mocked_fetch, mock_
     article.commit()
     mock_req.assert_called_once_with('patch', 'http://example.com/articles/1',
         make_patch_json([('5', 'comments'), ('2', 'people')], None, 'comments-or-authors'))
+
+    mock_req.reset_mock()
+    article.relationships.author.set(None)
+
+    article.commit()
+    mock_req.assert_called_once_with('patch', 'http://example.com/articles/1',
+        make_patch_json(None, None, 'author'))
 
 
 @pytest.mark.asyncio
@@ -1458,8 +1490,3 @@ def test_relationship_manipulation_alternative_api(mock_req, mocked_fetch, artic
     mock_req.reset_mock()
 
     #assert article.relationships.comments.value == ['7', '6']
-
-
-
-
-
