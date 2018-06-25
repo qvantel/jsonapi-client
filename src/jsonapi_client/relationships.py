@@ -271,6 +271,12 @@ class SingleRelationship(AbstractRelationship):
             return None
         return self._resource_identifier.as_resource_identifier_dict()
 
+    def _value_to_identifier(self, value: R_IDENT_TYPES, type_: str='') \
+            -> 'Union[ResourceIdentifier, ResourceObject]':
+        if value is None:
+            return None
+        return super()._value_to_identifier(value, type_)
+
     def set(self, new_value: R_IDENT_TYPES, type_: str='') -> None:
 
         self._resource_identifier = self._value_to_identifier(new_value, type_)
