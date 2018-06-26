@@ -857,7 +857,7 @@ def test_result_filtering(mocked_fetch, api_schema):
     s = Session('http://localhost:8080/', schema=api_schema)
 
     result = s.get('test_leases', Filter(title='Dippadai'))
-    result2 = s.get('test_leases', Filter(f'filter[title]="Dippadai"'))
+    result2 = s.get('test_leases', Filter(f'filter[title]=Dippadai'))
 
     assert result == result2
 

@@ -71,5 +71,5 @@ class Filter:
         """
         def jsonify_key(key):
             return key.replace('__', '.').replace('_', '-')
-        return '&'.join(f'filter[{jsonify_key(key)}]="{value}"'
+        return '&'.join(f'filter[{jsonify_key(key)}]={value}'
                         for key, value in kwargs.items())
