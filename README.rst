@@ -82,8 +82,8 @@ Client session
    # AsyncIO the same but remember to await:
    documents = await s.get('resource_type')
 
-Filtering
----------
+Filtering and including
+-----------------------
 
 .. code-block:: python
 
@@ -92,14 +92,23 @@ Filtering
    filter = Filter(attribute='something', attribute2='something_else')
    # - filtering some-dict.some-attr == 'something'
    filter = Filter(some_dict__some_attr='something'))
-   # - filtering manually with your server syntax.
-   filter = Filter('filter[post]=1&filter[author]=2')
 
-   # If you have different URL schema for filtering, you can implement your own Filter
-   # class (derive it from Filter and reimplement format_filter_query).
+   # Same thing goes for including.
+   # - including two fields
+   include = Inclusion('related_field', 'other_related_field')
 
-   # Then fetch your filtered document
-   filtered = s.get('resource_type', filter) # AsyncIO with await
+   # Custom syntax for request parameters.
+   # If you have different URL schema for filtering or other GET parameters,
+   # you can implement your own Modifier class (derive it from Modifier and
+   # reimplement appended_query).
+   modifier = Modifier('filter[post]=1&filter[author]=2')
+
+   # All above classes subclass Modifier and can be added to concatenate
+   # parameters
+   modifier_sum = filter + include + modifier
+
+   # Now fetch your document
+   filtered = s.get('resource_type', modifier_sum) # AsyncIO with await
 
    # To access resources included in document:
    r1 = document.resources[0]  # first ResourceObject of document.
