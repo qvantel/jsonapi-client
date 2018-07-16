@@ -223,21 +223,30 @@ class SingleRelationship(AbstractRelationship):
     """
     def _handle_data(self, data):
         super()._handle_data(data)
-        self._resource_identifier = ResourceIdentifier(self.session, self._resource_data)
+        if self._resource_data is None:
+            self._resource_identifier = None
+        else:
+            self._resource_identifier = ResourceIdentifier(self.session, self._resource_data)
         del self._resource_data  # This is not intended to be used after this
 
     async def _fetch_async(self) -> 'List[ResourceObject]':
         self.session.assert_async()
         res_id = self._resource_identifier
-        res = await self.session.fetch_resource_by_resource_identifier_async(res_id)
-        self._resources = {(res.type, res.id): res}
+        if res_id is None:
+            self._resources = {None: None}
+        else:
+            res = await self.session.fetch_resource_by_resource_identifier_async(res_id)
+            self._resources = {(res.type, res.id): res}
         return list(self._resources.values())
 
     def _fetch_sync(self) -> 'List[ResourceObject]':
         self.session.assert_sync()
         res_id = self._resource_identifier
-        res = self.session.fetch_resource_by_resource_identifier(res_id)
-        self._resources = {(res.type, res.id): res}
+        if res_id is None:
+            self._resources = {None: None}
+        else:
+            res = self.session.fetch_resource_by_resource_identifier(res_id)
+            self._resources = {(res.type, res.id): res}
         return list(self._resources.values())
 
     def __bool__(self):
@@ -252,11 +261,21 @@ class SingleRelationship(AbstractRelationship):
 
     @property
     def url(self) -> str:
+        if self._resource_identifier is None:
+            return self.links.related
         return self._resource_identifier.url
 
     @property
     def as_json_resource_identifiers(self) -> dict:
+        if self._resource_identifier is None:
+            return None
         return self._resource_identifier.as_resource_identifier_dict()
+
+    def _value_to_identifier(self, value: R_IDENT_TYPES, type_: str='') \
+            -> 'Union[ResourceIdentifier, ResourceObject]':
+        if value is None:
+            return None
+        return super()._value_to_identifier(value, type_)
 
     def set(self, new_value: R_IDENT_TYPES, type_: str='') -> None:
 

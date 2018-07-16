@@ -117,6 +117,35 @@
     "links": {
       "self": "http://example.com/articles/2"
     }
+  },
+  {
+    "type": "articles",
+    "id": "3",
+    "attributes": {
+      "title": "An authorless book!",
+      "nested1": {"nested": {"name": "test"}}
+    },
+    "relationships": {
+      "author": {
+        "data": null
+      },
+      "comments": {
+        "links": {
+          "self": "http://example.com/articles/3/relationships/comments",
+          "related": "http://example.com/articles/3/comments"
+        },
+        "data": []
+      },
+      "comment-or-author": {
+        "data": null
+      },
+      "comments-or-authors": {
+        "data": []
+      }
+    },
+    "links": {
+      "self": "http://example.com/articles/2"
+    }
   }
   ],
   "included": [{

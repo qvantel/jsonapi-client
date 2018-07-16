@@ -275,15 +275,18 @@ class RelationshipDict(dict):
         :param relation_type: either 'to-one' or 'to-many'
         """
         from . import relationships as rel
-        relationship_data = data.get('data')
-        if isinstance(relationship_data, list):
-            if not (not relation_type or relation_type == RelationType.TO_MANY):
-                logger.error('Conflicting information about relationship')
-            return rel.MultiRelationship
-        elif relationship_data:
-            if not(not relation_type or relation_type == RelationType.TO_ONE):
-                logger.error('Conflicting information about relationship')
-            return rel.SingleRelationship
+        if 'data' in data:
+            relationship_data = data['data']
+            if isinstance(relationship_data, list):
+                if not (not relation_type or relation_type == RelationType.TO_MANY):
+                    logger.error('Conflicting information about relationship')
+                return rel.MultiRelationship
+            elif relationship_data is None or isinstance(relationship_data, dict):
+                if not(not relation_type or relation_type == RelationType.TO_ONE):
+                    logger.error('Conflicting information about relationship')
+                return rel.SingleRelationship
+            else:
+                raise ValidationError('Relationship data key is invalid')
         elif 'links' in data:
             return rel.LinkRelationship
         elif 'meta' in data:
