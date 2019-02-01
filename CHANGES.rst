@@ -1,11 +1,15 @@
 CHANGELOG
 =========
 
-0.9.7 (unreleased)
+0.9.7 (2019-02-01)
 ------------------
 
-- Nothing changed yet.
-
+- Support __getitem__ in Meta
+- Handle empty relationship data list
+- Allow returning link to relationship as an iterator
+- Fix handling null one-to-one-relationship
+- Don't explicitly quote filter values
+- Include support
 
 0.9.6 (2017-06-26)
 ------------------
