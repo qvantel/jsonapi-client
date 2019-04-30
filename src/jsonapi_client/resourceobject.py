@@ -409,11 +409,10 @@ class ResourceObject(AbstractJsonObject):
         self.links = Links(self.session, data.get('links', {}))
         self.meta = Meta(self.session, data.get('meta', {}))
 
-        self._attributes = AttributeDict(data=data['attributes'],
-                                         resource=self)
         self._relationships = RelationshipDict(
             data=data.get('relationships', {}),
             resource=self)
+        self._attributes = AttributeDict(data=data.get('attributes', {}), resource=self)
 
         if self.id:
             self.validate()
