@@ -8,5 +8,5 @@ aiohttp
 aiodns
 sphinx
 sphinx-autodoc-annotation
-pytest-cov<2.7.1
+pytest-cov
 coveralls
