@@ -518,7 +518,7 @@ class ResourceObject(AbstractJsonObject):
         return HttpMethod.PATCH if self.id else HttpMethod.POST
 
     def _pre_commit(self, custom_url):
-        url = custom_url or self.post_url if self._http_method == HttpMethod.POST else self.url
+        url = custom_url or (self.post_url if self._http_method == HttpMethod.POST else self.url)
         logger.info('Committing %s to %s', self, url)
         self.validate()
         return url
