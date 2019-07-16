@@ -490,7 +490,7 @@ def test_error_404(mocked_fetch, api_schema):
     with pytest.raises(DocumentError) as e:
         s.get('error')
 
-    assert 'Error document was fetched' in str(e)
+    assert 'Error document was fetched' in str(e.value)
 
 
 @pytest.mark.asyncio
@@ -510,8 +510,8 @@ async def test_error_404_async(mocked_fetch, api_schema):
     assert e.value.errors['status_code'] == 404
     with pytest.raises(DocumentError) as e:
         await s.get('error')
-    assert 'Error document was fetched' in str(e)
-    s.close()
+    assert 'Error document was fetched' in str(e.value)
+    await s.close()
 
 
 def test_relationships_with_context_manager(mocked_fetch, api_schema):
@@ -946,7 +946,7 @@ def test_schema_validation(mocked_fetch):
     with pytest.raises(ValidationError) as e:
         article = s.get('articles')
         #article.title.startswith('JSON API paints')
-    assert 'is not of type \'number\'' in str(e)
+    assert 'is not of type \'number\'' in str(e.value)
 
 
 def make_patch_json(ids, type_, field_name=None):
