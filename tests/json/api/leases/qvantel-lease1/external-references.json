@@ -9,7 +9,8 @@
         "meta": {
           "type": "valid-for-datetime"
         }
-      }
+      },
+      "null-field": null
     },
     "relationships": {
       "target": {
