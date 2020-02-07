@@ -11,3 +11,4 @@ dist
 /.cache/
 *.swp
 /build/
+.pytest_cache
