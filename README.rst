@@ -74,6 +74,9 @@ Client session
    # If you are not using context manager, you need to close session manually
    s.close()
 
+   # Again, don't forget to await in the AsyncIO mode
+   await s.close()
+
    # Fetching documents
    documents = s.get('resource_type')
    # Or if you want only 1, then
