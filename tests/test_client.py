@@ -132,6 +132,16 @@ article_schema_simple = \
         'articles': articles,
     }
 
+# Invitation is an examaple of a resource without any attributes
+invitations = {'properties': {
+    'host': {'relation': 'to-one', 'resource': ['people']},
+    'guest': {'relation': 'to-one', 'resource': ['people']}
+    }
+}
+
+invitation_schema = {
+    'invitations': invitations
+}
 
 @pytest.fixture(scope='function', params=[None, article_schema_simple,
                                           article_schema_all])
@@ -247,6 +257,22 @@ def test_basic_attributes(mocked_fetch, article_schema):
     my_attrs = {i for i in dir(article.fields) if not i.startswith('_')}
 
     assert my_attrs == attr_set
+
+
+def test_resourceobject_without_attributes(mocked_fetch):
+    s = Session('http://localhost:8080', schema=invitation_schema)
+    doc = s.get('invitations')
+    assert len(doc.resources) == 1
+    invitation = doc.resources[0]
+    assert invitation.id == "1"
+    assert invitation.type == "invitations"
+    assert doc.links.self.href == 'http://example.com/invitations'
+    attr_set = {'host', 'guest'}
+
+    my_attrs = {i for i in dir(invitation.fields) if not i.startswith('_')}
+
+    assert my_attrs == attr_set
+
 
 
 @pytest.mark.asyncio
