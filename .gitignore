@@ -12,3 +12,5 @@ dist
 *.swp
 /build/
 .pytest_cache
+.venv
+.vscode
