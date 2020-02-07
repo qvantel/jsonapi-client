@@ -278,7 +278,7 @@ class Session:
         logger.info('Exiting session')
         if not exc_type:
             await self.commit()
-        await self.close()
+        await self.close_async()
 
     def close(self):
         """
@@ -286,7 +286,14 @@ class Session:
         """
         self.invalidate()
         if self.enable_async:
-            return self._aiohttp_session.close()
+            logger.warning('Please, use close_async instead')
+
+    async def close_async(self):
+        """
+        Close async session and invalidate resources.
+        """
+        self.invalidate()
+        return await self._aiohttp_session.close()
 
     def invalidate(self):
         """
