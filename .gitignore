@@ -11,3 +11,6 @@ dist
 /.cache/
 *.swp
 /build/
+.venv
+.vscode
+.pytest_cache

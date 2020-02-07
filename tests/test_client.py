@@ -511,7 +511,7 @@ async def test_error_404_async(mocked_fetch, api_schema):
     with pytest.raises(DocumentError) as e:
         await s.get('error')
     assert 'Error document was fetched' in str(e.value)
-    s.close()
+    await s.close()
 
 
 def test_relationships_with_context_manager(mocked_fetch, api_schema):
