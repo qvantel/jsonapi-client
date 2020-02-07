@@ -75,7 +75,7 @@ Client session
    s.close()
 
    # Again, don't forget to await in the AsyncIO mode
-   await s.close()
+   await s.close_async()
 
    # Fetching documents
    documents = s.get('resource_type')
