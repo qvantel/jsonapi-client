@@ -111,12 +111,27 @@ class Document(AbstractJsonObject):
         return f'{self.resources}' if self.resources else f'{self.errors}'
 
     def _iterator_sync(self) -> 'Iterator[ResourceObject]':
+        # if we currently have no items on the page, then there's no need to yield items
+        # and check the next page
+        # we do this because there are APIs that always have a 'next' link, even when 
+        # there are no items on the page
+        if len(self.resources) == 0:
+            return
+        
         yield from self.resources
+
         if self.links.next:
             next_doc = self.links.next.fetch()
             yield from next_doc.iterator()
 
     async def _iterator_async(self) -> 'AsyncIterator[ResourceObject]':
+        # if we currently have no items on the page, then there's no need to yield items
+        # and check the next page
+        # we do this because there are APIs that always have a 'next' link, even when 
+        # there are no items on the page
+        if len(self.resources) == 0:
+            return
+        
         for res in self.resources:
             yield res
 

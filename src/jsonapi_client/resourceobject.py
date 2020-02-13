@@ -409,11 +409,10 @@ class ResourceObject(AbstractJsonObject):
         self.links = Links(self.session, data.get('links', {}))
         self.meta = Meta(self.session, data.get('meta', {}))
 
-        self._attributes = AttributeDict(data=data['attributes'],
-                                         resource=self)
         self._relationships = RelationshipDict(
             data=data.get('relationships', {}),
             resource=self)
+        self._attributes = AttributeDict(data=data.get('attributes', {}), resource=self)
 
         if self.id:
             self.validate()
@@ -518,7 +517,7 @@ class ResourceObject(AbstractJsonObject):
         return HttpMethod.PATCH if self.id else HttpMethod.POST
 
     def _pre_commit(self, custom_url):
-        url = custom_url or self.post_url if self._http_method == HttpMethod.POST else self.url
+        url = custom_url or (self.post_url if self._http_method == HttpMethod.POST else self.url)
         logger.info('Committing %s to %s', self, url)
         self.validate()
         return url
