@@ -229,7 +229,7 @@ async def test_initialization_async(mocked_fetch, article_schema):
            s.resources_by_resource_identifier[('comments', '5')]
     assert s.resources_by_link['http://example.com/people/9'] is \
            s.resources_by_resource_identifier[('people', '9')]
-    s.close()
+    await s.close()
 
 
 def test_basic_attributes(mocked_fetch, article_schema):
@@ -267,7 +267,7 @@ async def test_basic_attributes_async(mocked_fetch, article_schema):
     my_attrs = {i for i in dir(article.fields) if not i.startswith('_')}
 
     assert my_attrs == attr_set
-    s.close()
+    await s.close()
 
 
 def test_relationships_single(mocked_fetch, article_schema):
@@ -353,7 +353,7 @@ async def test_relationships_single_async(mocked_fetch, article_schema):
     await article3.comment_or_author.fetch()
     assert article3.author.resource is None
     assert article3.comment_or_author.resource is None
-    s.close()
+    await s.close()
 
 def test_relationships_multi(mocked_fetch, article_schema):
     s = Session('http://localhost:8080', schema=article_schema)
@@ -422,7 +422,7 @@ async def test_relationships_multi_async(mocked_fetch, article_schema):
     assert res2.type == 'comments'
     assert res2.body == 'I like XML better'
 
-    s.close()
+    await s.close()
 
 
 def test_fetch_external_resources(mocked_fetch, article_schema):
@@ -474,7 +474,7 @@ async def test_fetch_external_resources_async(mocked_fetch, article_schema):
     assert c1_author.type == "people"
     assert c1_author.first_name == 'Dan 2'
     assert c1_author.last_name == 'Gebhardt 2'
-    s.close()
+    await s.close()
 
 def test_error_404(mocked_fetch, api_schema):
     s = Session('http://localhost:8080/api', schema=api_schema)
@@ -712,7 +712,7 @@ async def test_more_relationships_async_fetch(mocked_fetch, api_schema):
     await parent_lease.fetch()
     assert parent_lease.resource.active_status == 'active'
     # ^ now parent lease is fetched, but attribute access goes through Relationship
-    s.close()
+    await s.close()
 
 class SuccessfullResponse:
     status_code = 200
@@ -858,7 +858,7 @@ async def test_result_pagination_iteration_async(mocked_fetch, api_schema):
     assert len(leases) == 6
     for l in range(len(leases)):
         assert leases[l].id == str(l+1)
-    s.close()
+    await s.close()
 
 
 def test_result_filtering(mocked_fetch, api_schema):
@@ -1016,7 +1016,7 @@ async def test_posting_successfull_async(mock_req_async, mock_update_resource):
 
     mock_req_async.assert_called_once_with('post', 'http://localhost:80801/api/leases',
                                      agr_data)
-    s.close()
+    await s.close()
 
 @pytest.mark.parametrize('commit', [0, 1])
 @pytest.mark.parametrize('kw_format', [0, 1])
@@ -1193,7 +1193,7 @@ async def test_posting_successfull_without_schema(mock_req_async, mock_update_re
 
     mock_req_async.assert_called_once_with('post', 'http://localhost:80801/api/leases',
                                      agr_data)
-    s.close()
+    await s.close()
 
 def test_posting_post_validation_error():
     s = Session('http://localhost:80801/api', schema=api_schema_all)
@@ -1406,7 +1406,7 @@ async def test_relationship_manipulation_async(mock_req_async, mocked_fetch, art
                                      make_patch_json([6, 7, 8, 9, 10, 11],
                                                            'comments'))
     mock_req_async.reset_mock()
-    s.close()
+    await s.close()
 
 def test_relationship_manipulation_alternative_api(mock_req, mocked_fetch, article_schema, mock_update_resource):
     s = Session('http://localhost:80801/', schema=article_schema)
