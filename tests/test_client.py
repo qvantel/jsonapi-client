@@ -1516,3 +1516,134 @@ def test_relationship_manipulation_alternative_api(mock_req, mocked_fetch, artic
     mock_req.reset_mock()
 
     #assert article.relationships.comments.value == ['7', '6']
+
+
+class SuccessfullLeaseResponse:
+    status_code = 200
+    headers = {}
+    content = ''
+
+    @classmethod
+    def json(cls):
+        return {
+            'data': {
+                'id': 'qvantel-lease1',
+                'type': 'leases',
+                'attributes': {
+                    'valid-for': {
+                        'new-field': 'something-new',
+                        'start-datetime': 'something-else'
+                    }
+                },
+                'relationships': {
+                    'external-references': {
+                        'data': [
+                            {
+                                'id': 'qvantel-lease1-extref',
+                                'type': 'external-references'},
+                            {
+                                'id': '1',
+                                'type': 'external-references'},
+                            {
+                                'id': '2',
+                                'type': 'external-references'},
+                            {
+                                'id': '3',
+                                'type': 'external-references'}
+                        ]
+                    }
+                }
+            }
+        }
+
+
+@pytest.mark.asyncio
+async def test_set_custom_request_header_async_get_session():
+    patcher = mock.patch('aiohttp.ClientSession')
+    client_mock = patcher.start()
+    request_kwargs = {'headers': {'Foo': 'Bar', 'X-Test': 'test'}}
+    s = Session(
+        'http://localhost',
+        schema=leases,
+        enable_async=True,
+        request_kwargs=request_kwargs
+    )
+    client_mock().get.return_value = SuccessfullLeaseResponse
+    with pytest.raises(AttributeError):
+        await s.get('leases', 1)
+
+    s.close()
+    assert client_mock().get.called
+    args = client_mock().get.call_args
+    assert args[1]['headers']['Foo'] == 'Bar'
+    assert args[1]['headers']['X-Test'] == 'test'
+    patcher.stop()
+
+
+def test_set_custom_request_header_get_session():
+    patcher = mock.patch('requests.get')
+    get_mock = patcher.start()
+    request_kwargs = {'headers': {'Foo': 'Bar', 'X-Test': 'test'}}
+    s = Session('http://localhost', schema=leases, request_kwargs=request_kwargs)
+    get_mock.return_value = SuccessfullLeaseResponse
+    s.get('leases', 1)
+
+    s.close()
+    assert get_mock.called
+    args = get_mock.call_args
+    assert args[1]['headers']['Foo'] == 'Bar'
+    assert args[1]['headers']['X-Test'] == 'test'
+    patcher.stop()
+
+
+def test_set_custom_request_header_patch_session():
+    patcher = mock.patch('requests.get')
+    get_mock = patcher.start()
+    request_kwargs = {'headers': {'Foo': 'Bar', 'X-Test': 'test'}}
+    s = Session('http://localhost', schema=leases, request_kwargs=request_kwargs)
+    get_mock.return_value = SuccessfullLeaseResponse
+    lease = s.get('leases', 1)
+    patcher.stop()
+
+    patcher = mock.patch('requests.request')
+    request_mock = patcher.start()
+    lease.resource.valid_for.new_field = "updated"
+    with pytest.raises(DocumentError):
+        s.commit()
+    s.close()
+    assert request_mock.called
+    args = request_mock.call_args
+    assert args[1]['headers']['Content-Type'] == 'application/vnd.api+json'
+    assert args[1]['headers']['Foo'] == 'Bar'
+    assert args[1]['headers']['X-Test'] == 'test'
+    patcher.stop()
+
+
+@pytest.mark.asyncio
+async def test_posting_async_with_custom_header():
+    patcher = mock.patch('aiohttp.ClientSession.request')
+    request_mock = patcher.start()
+    request_kwargs = {'headers': {'Foo': 'Bar', 'X-Test': 'test'}, 'something': 'else'}
+    s = Session(
+        'http://localhost/api',
+        schema=api_schema_all,
+        enable_async=True,
+        request_kwargs=request_kwargs
+    )
+    a = s.create('leases')
+    assert a.is_dirty
+    a.lease_id = '1'
+    a.active_status = 'pending'
+    a.reference_number = 'test'
+    a.valid_for.start_datetime = 'asdf'
+    with pytest.raises(AttributeError):
+        await a.commit()
+
+    s.close()
+    assert request_mock.called
+    args = request_mock.call_args
+    assert args[1]['headers']['Content-Type'] == 'application/vnd.api+json'
+    assert args[1]['headers']['Foo'] == 'Bar'
+    assert args[1]['headers']['X-Test'] == 'test'
+    assert args[1]['something'] == 'else'
+    patcher.stop()

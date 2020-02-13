@@ -525,10 +525,13 @@ class Session:
         import requests
         logger.debug('%s request: %s', http_method.upper(), send_json)
         expected_statuses = expected_statuses or HttpStatus.ALL_OK
+        kwargs = {**self._request_kwargs}
+        headers = {'Content-Type':'application/vnd.api+json'}
+        headers.update(kwargs.pop('headers', {}))
 
         response = requests.request(http_method, url, json=send_json,
-                                    headers={'Content-Type': 'application/vnd.api+json'},
-                                    **self._request_kwargs)
+                                    headers=headers,
+                                    **kwargs)
 
         if response.status_code not in expected_statuses:
             raise DocumentError(f'Could not {http_method.upper()} '
@@ -559,10 +562,13 @@ class Session:
         logger.debug('%s request: %s', http_method.upper(), send_json)
         expected_statuses = expected_statuses or HttpStatus.ALL_OK
         content_type = '' if http_method == HttpMethod.DELETE else 'application/vnd.api+json'
+        kwargs = {**self._request_kwargs}
+        headers = {'Content-Type':'application/vnd.api+json'}
+        headers.update(kwargs.pop('headers', {}))
         async with self._aiohttp_session.request(
                 http_method, url, data=json.dumps(send_json),
-                headers={'Content-Type':'application/vnd.api+json'},
-                **self._request_kwargs) as response:
+                headers=headers,
+                **kwargs) as response:
 
             if response.status not in expected_statuses:
                 raise DocumentError(f'Could not {http_method.upper()} '
