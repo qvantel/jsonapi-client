@@ -1639,7 +1639,7 @@ async def test_posting_async_with_custom_header():
     with pytest.raises(AttributeError):
         await a.commit()
 
-    s.close()
+    await s.close()
     assert request_mock.called
     args = request_mock.call_args
     assert args[1]['headers']['Content-Type'] == 'application/vnd.api+json'
