@@ -59,7 +59,7 @@ Client session
    # You can also pass extra arguments that are passed directly to requests or aiohttp methods,
    # such as authentication object
    s = Session('http://localhost:8080/',
-               request_kwargs=dict(auth=HttpBasicAuth('user', 'password'))
+               request_kwargs=dict(auth=HTTPBasicAuth('user', 'password'))
 
 
    # You can also use Session as a context manager. Changes are committed in the end
@@ -73,6 +73,9 @@ Client session
 
    # If you are not using context manager, you need to close session manually
    s.close()
+
+   # Again, don't forget to await in the AsyncIO mode
+   await s.close()
 
    # Fetching documents
    documents = s.get('resource_type')

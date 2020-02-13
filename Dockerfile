@@ -1,7 +1,7 @@
 FROM python:3.6.1-alpine
 MAINTAINER Tuomas Airaksinen <tuomas.airaksinen@qvantel.com>
 ENV PYTHONUNBUFFERED 1
-RUN apk update && apk upgrade && apk add --no-cache gcc python3-dev musl-dev make
+RUN apk update && apk upgrade && apk add --no-cache gcc python3-dev musl-dev make libffi-dev
 RUN pip install -U pip setuptools
 RUN adduser -D web
 RUN mkdir /jsonapi-client
