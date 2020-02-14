@@ -1,6 +1,20 @@
 CHANGELOG
 =========
 
+0.9.8 (2020-02-14)
+------------------
+
+- #25: Fix for fetching resources without attributes
+- Stop following next when there are no more items
+- Fix build
+- Use custom_url logic for all request methods
+- #27: Await close on async sessions
+- Add apk libffi-dev dependency
+- Fix pytest.raise exception validation e.value
+- Added .venv, .vscode, .pytest_cache to .gitignore
+- Add support for extra headers as request_kwargs
+
+
 0.9.7 (2019-02-01)
 ------------------
 
