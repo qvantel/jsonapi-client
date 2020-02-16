@@ -97,9 +97,9 @@ class AbstractJsonObject:
         self._invalid = True
 
 
-def error_from_response(response):
+def error_from_response(response_content):
     try:
-        error_str = response.json()['errors'][0]['title']
+        error_str = response_content['errors'][0]['title']
     except Exception:
         error_str = '?'
     return error_str
