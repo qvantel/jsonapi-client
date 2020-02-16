@@ -2,6 +2,7 @@ requests
 pytest-asyncio
 pytest-mock
 pytest
+pytest-aiohttp
 asynctest
 jsonschema
 aiohttp
