@@ -30,6 +30,9 @@ external_references = \
                                                      'format': 'date-time',
                                                      'type': ['string', 'null']}},
                                   'required': ['start-datetime'],
+                                  'type': 'object'},
+                    'null-field': {'properties': {'useless-field': {'type': ['string',
+                                                                             'null']}},
                                   'type': 'object'}},
      'type': 'object'}
 

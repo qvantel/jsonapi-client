@@ -212,7 +212,7 @@ class Session:
                 res_types = props['resource']
                 if isinstance(value, RESOURCE_TYPES + (str,)):
                     value = self._value_to_dict(value, res_types)
-                elif isinstance(value, collections.Iterable):
+                elif isinstance(value, collections.abc.Iterable):
                     value = [self._value_to_dict(id_, res_types) for id_ in value]
                 rels[key] = {'data': value}
             else:

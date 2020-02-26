@@ -89,6 +89,10 @@ class AttributeDict(dict):
             for field_name, field_spec in specification['properties'].items():
                 if field_spec.get('type') == 'object':
                     _data = data.pop(field_name, {})
+                    # Workaround a strange bug where _data is None instead of
+                    # default value {}
+                    if _data is None:
+                        _data = {}
                     self[field_name] = AttributeDict(data=_data,
                                                      name=field_name,
                                                      parent=self,
@@ -102,10 +106,11 @@ class AttributeDict(dict):
                 logger.warning('There was extra data (not specified in schema): %s',
                                data)
         # If not, we will use the source data as it is.
-        self.update(data)
-        for key, value in data.items():
-            if isinstance(value, dict):
-                self[key] = AttributeDict(data=value, name=key, parent=self, resource=resource)
+        if data:
+            self.update(data)
+            for key, value in data.items():
+                if isinstance(value, dict):
+                    self[key] = AttributeDict(data=value, name=key, parent=self, resource=resource)
         self._dirty_attributes.clear()
 
     def create_map(self, attr_name):
