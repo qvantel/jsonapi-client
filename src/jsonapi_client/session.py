@@ -509,9 +509,9 @@ class Session:
             if response.status == HttpStatus.OK_200:
                 return await response.json(content_type='application/vnd.api+json')
             else:
-                raise DocumentError(f'Error {response.status_code}: '
+                raise DocumentError(f'Error {response.status}: '
                                     f'{error_from_response(response)}',
-                                    errors={'status_code': response.status_code},
+                                    errors={'status_code': response.status},
                                     response=response)
 
     def http_request(self, http_method: str, url: str, send_json: dict,
