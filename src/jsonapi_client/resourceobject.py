@@ -89,6 +89,10 @@ class AttributeDict(dict):
             for field_name, field_spec in specification['properties'].items():
                 if field_spec.get('type') == 'object':
                     _data = data.pop(field_name, {})
+                    # Workaround a strange bug where _data is None instead of
+                    # default value {}
+                    if _data is None:
+                        _data = {}
                     self[field_name] = AttributeDict(data=_data,
                                                      name=field_name,
                                                      parent=self,
@@ -102,10 +106,11 @@ class AttributeDict(dict):
                 logger.warning('There was extra data (not specified in schema): %s',
                                data)
         # If not, we will use the source data as it is.
-        self.update(data)
-        for key, value in data.items():
-            if isinstance(value, dict):
-                self[key] = AttributeDict(data=value, name=key, parent=self, resource=resource)
+        if data:
+            self.update(data)
+            for key, value in data.items():
+                if isinstance(value, dict):
+                    self[key] = AttributeDict(data=value, name=key, parent=self, resource=resource)
         self._dirty_attributes.clear()
 
     def create_map(self, attr_name):
@@ -409,11 +414,10 @@ class ResourceObject(AbstractJsonObject):
         self.links = Links(self.session, data.get('links', {}))
         self.meta = Meta(self.session, data.get('meta', {}))
 
-        self._attributes = AttributeDict(data=data['attributes'],
-                                         resource=self)
         self._relationships = RelationshipDict(
             data=data.get('relationships', {}),
             resource=self)
+        self._attributes = AttributeDict(data=data.get('attributes', {}), resource=self)
 
         if self.id:
             self.validate()
@@ -518,7 +522,7 @@ class ResourceObject(AbstractJsonObject):
         return HttpMethod.PATCH if self.id else HttpMethod.POST
 
     def _pre_commit(self, custom_url):
-        url = custom_url or self.post_url if self._http_method == HttpMethod.POST else self.url
+        url = custom_url or (self.post_url if self._http_method == HttpMethod.POST else self.url)
         logger.info('Committing %s to %s', self, url)
         self.validate()
         return url

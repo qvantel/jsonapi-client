@@ -4,9 +4,9 @@ pytest-mock
 pytest
 asynctest
 jsonschema
-aiohttp
+aiohttp>=3.0
 aiodns
 sphinx
 sphinx-autodoc-annotation
-pytest-cov<2.6.0
+pytest-cov
 coveralls

@@ -1,0 +1,35 @@
+{
+  "links": {
+    "self": "http://example.com/invitations",
+    "next": "http://example.com/invitations?page[offset]=2",
+    "last": "http://example.com/invitations?page[offset]=2"
+  },
+  "data": [
+    {
+      "type": "invitations",
+      "id": "1",
+      "relationships": {
+        "host": {
+          "links": {
+            "self": "http://example.com/invitations/1/relationships/host",
+            "related": "http://example.com/invitations/1/host"
+          },
+          "data": {
+            "type": "people",
+            "id": "2"
+          }
+        },
+        "guest": {
+          "links": {
+            "self": "http://example.com/invitations/1/relationships/guest",
+            "related": "http://example.com/invitations/1/guest"
+          },
+          "data": {
+            "type": "people",
+            "id": "9"
+          }
+        }
+      }
+    }
+  ]
+}
