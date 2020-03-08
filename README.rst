@@ -273,6 +273,42 @@ Deleting resources
     cust1.commit() # Actually delete
 
 
+Session history for debugging
+------------------
+
+.. code-block:: python
+
+    # You can use session history to debug http requests.
+    # Session history will be enabled, if you set the log level to DEBUG
+    # or explicitly set a session parameter enable_history_at_log level to a log level
+    # equal or lower than the actual log level.
+
+    # Session history will be enabled by: (Python log level is WARNING by default)
+    s = Session('http://localhost:8080/', schema=models_as_jsonschema,
+                enable_history_at_loglevel='WARNING')
+    # or
+    import logging
+    logging.basicConfig(level='DEBUG')
+    s = Session('http://localhost:8080/', schema=models_as_jsonschema)
+
+    # Session history will be disabled
+    logging.basicConfig(level='INFO')
+    s = Session('http://localhost:8080/', schema=models_as_jsonschema)
+
+    # Session history is a list of session history items.
+    # You can see the information about the request and response
+    # For example
+    s.history.latest
+    # will print out some data about the latest request
+    # That actually equals to
+    s.history[-1]
+
+    # You can see the latest server response by
+    print(s.history.latest.response_content)
+    # or to see the response headers
+    s.history.latest.headers
+
+
 Credits
 =======
 

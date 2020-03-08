@@ -56,6 +56,78 @@ logger = logging.getLogger(__name__)
 NOT_FOUND = object()
 
 
+class SessionHistory(list):
+    @property
+    def latest(self):
+        if len(self):
+            return self[-1]
+        else:
+            return None
+
+
+class SessionHistoryItem:
+    def __init__(self, session: 'Session', url: str, http_method: str, response, send_json: dict=None):
+        self.session = session
+        self.response = response
+        self.url = url
+        self.send_json = send_json
+        self.http_method = http_method.upper()
+
+    def __repr__(self):
+        content = self.content
+        content_cut_after = 100
+        if len(content) > content_cut_after:
+            content = f"{content[:content_cut_after]}..."
+        request_str = f"Request: {self.url}\n  method: {self.http_method}\n"
+        if self.send_json:
+            request_content = json.dumps(self.send_json)
+            if len(request_content) > content_cut_after:
+                request_content = f"{request_content[:content_cut_after]}..."
+            request_str += f"  payload: {request_content}\n"
+        r =  f"{request_str}" \
+             f"Response: \n  status code: {self.status_code}\n" \
+               f"  content length: {self.content_length}\n" \
+               f"  content: {content}"
+        return r
+
+    @property
+    def content(self):
+        if self.session.enable_async:
+            return self.response._body
+        else:
+            return self.response.content
+
+    @property
+    def response_content(self):
+        """
+        This is used to pretty print the contents for debugging purposes.
+        If you don't want pretty print, please use self.response.content directly
+        Example: If session is s, you can pretty print out the latest content by
+        print(s.history.latest.content)
+        """
+        loaded = json.loads(self.response.content)
+        return json.dumps(loaded, indent=4, sort_keys=True)
+
+    @property
+    def payload(self):
+        return json.dumps(self.send_json, indent=4, sort_keys=True)
+
+    @property
+    def content_length(self):
+        return len(self.content)
+
+    @property
+    def headers(self):
+        return self.response.headers
+
+    @property
+    def status_code(self):
+        if self.session.enable_async:
+            return self.response.status
+        else:
+            return self.response.status_code
+
+
 class Schema:
     """
     Container for model schemas with associated methods.
@@ -123,7 +195,8 @@ class Session:
                  schema: dict=None,
                  request_kwargs: dict=None,
                  loop: 'AbstractEventLoop'=None,
-                 use_relationship_iterator: bool=False,) -> None:
+                 use_relationship_iterator: bool=False,
+                 enable_history_at_loglevel: str='DEBUG') -> None:
         self._server: ParseResult
         self.enable_async = enable_async
 
@@ -143,6 +216,8 @@ class Session:
             import aiohttp
             self._aiohttp_session = aiohttp.ClientSession(loop=loop)
         self.use_relationship_iterator = use_relationship_iterator
+        self._enable_history = logger.isEnabledFor(getattr(logging, enable_history_at_loglevel))
+        self.history = SessionHistory()
 
     def add_resources(self, *resources: 'ResourceObject') -> None:
         """
@@ -475,6 +550,13 @@ class Session:
         json_data = await self._fetch_json_async(url)
         return self.read(json_data, url)
 
+    def _append_to_session_history(self, url: str, http_method: str,
+                                   response, send_json: dict=None):
+        if self._enable_history:
+            self.history.append(
+                SessionHistoryItem(self, url, http_method, response, send_json)
+            )
+
     def _fetch_json(self, url: str) -> dict:
         """
         Internal use.
@@ -487,6 +569,7 @@ class Session:
         logger.info('Fetching document from url %s', parsed_url)
         response = requests.get(parsed_url.geturl(), **self._request_kwargs)
         response_content = response.json()
+        self._append_to_session_history(url, 'GET', response)
         if response.status_code == HttpStatus.OK_200:
             return response_content
         else:
@@ -508,6 +591,7 @@ class Session:
         async with self._aiohttp_session.get(parsed_url.geturl(),
                                              **self._request_kwargs) as response:
             response_content = await response.json(content_type='application/vnd.api+json')
+            self._append_to_session_history(url, 'GET', response)
             if response.status == HttpStatus.OK_200:
                 return response_content
             else:
@@ -536,6 +620,7 @@ class Session:
                                     **kwargs)
 
         response_json = response.json()
+        self._append_to_session_history(url, http_method, response, send_json)
         if response.status_code not in expected_statuses:
             raise DocumentError(f'Could not {http_method.upper()} '
                                 f'({response.status_code}): '
@@ -574,6 +659,7 @@ class Session:
                 **kwargs) as response:
 
             response_json = await response.json(content_type=content_type)
+            self._append_to_session_history(url, http_method, response, send_json)
             if response.status not in expected_statuses:
                 raise DocumentError(f'Could not {http_method.upper()} '
                                     f'({response.status}): '
