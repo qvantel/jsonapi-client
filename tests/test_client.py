@@ -1797,6 +1797,10 @@ def test_history_get():
     assert latest.url == 'http://localhost:8080/leases'
     assert latest.http_method == 'GET'
     assert latest.send_json is None
+    assert 'Content-Type' in latest.headers
+    # Just make sure that these properties execute
+    latest.response_content
+    latest.payload
     assert latest.content_length == len(response._content)
     assert latest.status_code == 200
 
@@ -1838,6 +1842,10 @@ def test_history_post():
             'type': 'leases'
         }
     }
+    assert 'Content-Type' in latest.headers
+    # Just make sure that these properties execute
+    latest.response_content
+    latest.payload
     assert latest.content_length == len(response._content)
     assert latest.status_code == 500
 
@@ -1873,6 +1881,10 @@ async def test_history_async_get(loop, session):
     assert latest.url == 'http://localhost/invalid'
     assert latest.http_method == 'GET'
     assert latest.send_json is None
+    assert 'Content-Type' in latest.headers
+    # Just make sure that these properties execute
+    latest.response_content
+    latest.payload
     assert latest.content_length == len(response._body)
     assert latest.status_code == 404
 
@@ -1927,5 +1939,9 @@ async def test_history_async_post(loop, session):
             'type': 'leases'
         }
     }
+    assert 'Content-Type' in latest.headers
+    # Just make sure that these properties execute
+    latest.response_content
+    latest.payload
     assert latest.content_length == len(response._body)
     assert latest.status_code == 500

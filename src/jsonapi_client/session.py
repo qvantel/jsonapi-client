@@ -105,7 +105,7 @@ class SessionHistoryItem:
         Example: If session is s, you can pretty print out the latest content by
         print(s.history.latest.content)
         """
-        loaded = json.loads(self.response.content)
+        loaded = json.loads(self.content)
         return json.dumps(loaded, indent=4, sort_keys=True)
 
     @property
