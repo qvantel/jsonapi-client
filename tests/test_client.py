@@ -1913,6 +1913,7 @@ async def test_history_async_post(loop, session):
 
     assert len(s.history) == 1
     latest = s.history.latest
+    print(latest)
     assert latest.url == 'http://localhost:8080/leases'
     assert latest.http_method == 'POST'
     assert latest.send_json == {
