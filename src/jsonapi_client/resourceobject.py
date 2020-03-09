@@ -84,6 +84,8 @@ class AttributeDict(dict):
 
         specification = self._schema.find_spec(self._resource.type, self._full_name)
 
+        # Using .pop() below modifies the data, so we make a shallow copy of it first
+        data = data.copy()
         # If there's schema for this object, we will use it to construct object.
         if specification:
             for field_name, field_spec in specification['properties'].items():
