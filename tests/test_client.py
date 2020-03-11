@@ -1,8 +1,12 @@
 from unittest.mock import Mock
 from urllib.parse import urlparse
+from yarl import URL
 
+from aiohttp import ClientResponse
+from aiohttp.helpers import TimerNoop
 import jsonschema
 import pytest
+from requests import Response
 import json
 import os
 from jsonschema import ValidationError
@@ -215,6 +219,11 @@ def mocked_fetch(mocker):
 def mock_update_resource(mocker):
     m = mocker.patch('jsonapi_client.resourceobject.ResourceObject._update_resource')
     return m
+
+
+@pytest.fixture
+def session():
+    return mock.Mock()
 
 
 def test_initialization(mocked_fetch, article_schema):
@@ -742,6 +751,7 @@ async def test_more_relationships_async_fetch(mocked_fetch, api_schema):
     assert parent_lease.resource.active_status == 'active'
     # ^ now parent lease is fetched, but attribute access goes through Relationship
     await s.close()
+
 
 class SuccessfullResponse:
     status_code = 200
@@ -1649,4 +1659,109 @@ async def test_posting_async_with_custom_header():
     assert args[1]['headers']['Foo'] == 'Bar'
     assert args[1]['headers']['X-Test'] == 'test'
     assert args[1]['something'] == 'else'
+    patcher.stop()
+
+
+def test_error_handling_get():
+    response = Response()
+    response.url = URL('http://localhost:8080/invalid')
+    response.request = mock.Mock()
+    response.headers = {'Content-Type': 'application/vnd.api+json'}
+    response._content = json.dumps({'errors': [{'title': 'Resource not found'}]}).encode('UTF-8')
+    response.status_code = 404
+
+    patcher = mock.patch('requests.get')
+    client_mock = patcher.start()
+    s = Session('http://localhost', schema=leases)
+    client_mock.return_value = response
+    with pytest.raises(DocumentError) as exp:
+        s.get('invalid')
+
+    assert str(exp.value) == 'Error 404: Resource not found'
+    patcher.stop()
+
+
+def test_error_handling_post():
+    response = Response()
+    response.url = URL('http://localhost:8080/invalid')
+    response.request = mock.Mock()
+    response.headers = {'Content-Type': 'application/vnd.api+json'}
+    response._content = json.dumps({'errors': [{'title': 'Internal server error'}]}).encode('UTF-8')
+    response.status_code = 500
+
+    patcher = mock.patch('requests.request')
+    client_mock = patcher.start()
+    s = Session('http://localhost', schema=leases)
+    client_mock.return_value = response
+    a = s.create('leases')
+    assert a.is_dirty
+    a.lease_id = '1'
+    a.active_status = 'pending'
+    a.reference_number = 'test'
+    with pytest.raises(DocumentError) as exp:
+        a.commit()
+
+    assert str(exp.value) == 'Could not POST (500): Internal server error'
+    patcher.stop()
+
+
+@pytest.mark.asyncio
+async def test_error_handling_async_get(loop, session):
+    response = ClientResponse('get', URL('http://localhost:8080/invalid'),
+                              request_info=mock.Mock(),
+                              writer=mock.Mock(),
+                              continue100=None,
+                              timer=TimerNoop(),
+                              traces=[],
+                              loop=loop,
+                              session=session,
+                              )
+    response._headers = {'Content-Type': 'application/vnd.api+json'}
+    response._body = json.dumps({'errors': [{'title': 'Resource not found'}]}).encode('UTF-8')
+    response.status = 404
+
+    patcher = mock.patch('aiohttp.ClientSession')
+    client_mock = patcher.start()
+    s = Session('http://localhost', schema=leases, enable_async=True)
+    client_mock().get.return_value = response
+    with pytest.raises(DocumentError) as exp:
+        await s.get('invalid')
+
+    assert str(exp.value) == 'Error 404: Resource not found'
+    patcher.stop()
+
+
+@pytest.mark.asyncio
+async def test_error_handling_posting_async(loop, session):
+    response = ClientResponse('post', URL('http://localhost:8080/leases'),
+                              request_info=mock.Mock(),
+                              writer=mock.Mock(),
+                              continue100=None,
+                              timer=TimerNoop(),
+                              traces=[],
+                              loop=loop,
+                              session=session,
+                              )
+    response._headers = {'Content-Type': 'application/vnd.api+json'}
+    response._body = json.dumps({'errors': [{'title': 'Internal server error'}]}).encode('UTF-8')
+    response.status = 500
+
+    patcher = mock.patch('aiohttp.ClientSession.request')
+    request_mock = patcher.start()
+    s = Session(
+        'http://localhost:8080',
+        schema=api_schema_all,
+        enable_async=True
+    )
+    request_mock.return_value = response
+
+    a = s.create('leases')
+    assert a.is_dirty
+    a.lease_id = '1'
+    a.active_status = 'pending'
+    a.reference_number = 'test'
+    with pytest.raises(DocumentError) as exp:
+        await a.commit()
+
+    assert str(exp.value) == 'Could not POST (500): Internal server error'
     patcher.stop()
