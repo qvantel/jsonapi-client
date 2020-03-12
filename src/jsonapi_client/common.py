@@ -170,6 +170,15 @@ class AttributeProxy:
         except KeyError:
             raise AttributeError
 
+    def get(self, item, default=object()):
+        # Can't use default=None as .get('foo', None) is common, so use
+        # a unique empty object with a reference check
+        if default is self.get.__defaults__[0]:
+            self.__getattr__(item)
+
+        item_json = jsonify_attribute_name(item)
+        return self[item_json] if hasattr(self, item_json) else default
+
     def __setattr__(self, key, value):
         if key == '_target_object':
             return super().__setattr__(key, value)
