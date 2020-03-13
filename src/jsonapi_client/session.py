@@ -212,7 +212,7 @@ class Session:
                 res_types = props['resource']
                 if isinstance(value, RESOURCE_TYPES + (str,)):
                     value = self._value_to_dict(value, res_types)
-                elif isinstance(value, collections.Iterable):
+                elif isinstance(value, collections.abc.Iterable):
                     value = [self._value_to_dict(id_, res_types) for id_ in value]
                 rels[key] = {'data': value}
             else:
@@ -486,12 +486,13 @@ class Session:
         parsed_url = urlparse(url)
         logger.info('Fetching document from url %s', parsed_url)
         response = requests.get(parsed_url.geturl(), **self._request_kwargs)
+        response_content = response.json()
         if response.status_code == HttpStatus.OK_200:
-            return response.json()
+            return response_content
         else:
 
             raise DocumentError(f'Error {response.status_code}: '
-                                f'{error_from_response(response)}',
+                                f'{error_from_response(response_content)}',
                                 errors={'status_code': response.status_code},
                                 response=response)
 
@@ -506,12 +507,13 @@ class Session:
         logger.info('Fetching document from url %s', parsed_url)
         async with self._aiohttp_session.get(parsed_url.geturl(),
                                              **self._request_kwargs) as response:
+            response_content = await response.json(content_type='application/vnd.api+json')
             if response.status == HttpStatus.OK_200:
-                return await response.json(content_type='application/vnd.api+json')
+                return response_content
             else:
-                raise DocumentError(f'Error {response.status_code}: '
-                                    f'{error_from_response(response)}',
-                                    errors={'status_code': response.status_code},
+                raise DocumentError(f'Error {response.status}: '
+                                    f'{error_from_response(response_content)}',
+                                    errors={'status_code': response.status},
                                     response=response)
 
     def http_request(self, http_method: str, url: str, send_json: dict,
@@ -533,15 +535,16 @@ class Session:
                                     headers=headers,
                                     **kwargs)
 
+        response_json = response.json()
         if response.status_code not in expected_statuses:
             raise DocumentError(f'Could not {http_method.upper()} '
                                 f'({response.status_code}): '
-                                f'{error_from_response(response)}',
+                                f'{error_from_response(response_json)}',
                                 errors={'status_code': response.status_code},
                                 response=response,
                                 json_data=send_json)
 
-        return response.status_code, response.json() \
+        return response.status_code, response_json \
             if response.content \
             else {}, response.headers.get('Location')
 
@@ -570,15 +573,14 @@ class Session:
                 headers=headers,
                 **kwargs) as response:
 
+            response_json = await response.json(content_type=content_type)
             if response.status not in expected_statuses:
                 raise DocumentError(f'Could not {http_method.upper()} '
                                     f'({response.status}): '
-                                    f'{error_from_response(response)}',
+                                    f'{error_from_response(response_json)}',
                                     errors={'status_code': response.status},
                                     response=response,
                                     json_data=send_json)
-
-            response_json = await response.json(content_type=content_type)
 
             return response.status, response_json or {}, response.headers.get('Location')
 

@@ -2,9 +2,10 @@ requests
 pytest-asyncio
 pytest-mock
 pytest
+pytest-aiohttp
 asynctest
 jsonschema
-aiohttp
+aiohttp>=3.0
 aiodns
 sphinx
 sphinx-autodoc-annotation

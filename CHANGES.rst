@@ -1,6 +1,17 @@
 CHANGELOG
 =========
 
+
+0.9.9 (2020-03-12)
+------------------
+
+- Adapt to aiohttp>3.0
+- Workaround a weird bug
+- Fix deprecation warnings
+- Prevent AttributeDict() from modifying its input
+- #24: Fix error handling of server response
+
+
 0.9.8 (2020-02-14)
 ------------------
 

@@ -343,7 +343,7 @@ class MultiRelationship(AbstractRelationship):
         """
         if type_ is None:
             type_ = self.type
-        if isinstance(new_value, collections.Iterable):
+        if isinstance(new_value, collections.abc.Iterable):
             self._resource_identifiers.extend(
                 [self._value_to_identifier(val, type_) for val in new_value])
         else:
@@ -424,7 +424,7 @@ class LinkRelationship(AbstractRelationship):
 
     def set(self, new_value: Union[Iterable[R_IDENT_TYPES], R_IDENT_TYPES],
             type_: str='') -> None:
-        if isinstance(new_value, collections.Iterable):
+        if isinstance(new_value, collections.abc.Iterable):
             if self.is_single:
                 logger.warning('This should contain list of resources, '
                                'but only one is given')
