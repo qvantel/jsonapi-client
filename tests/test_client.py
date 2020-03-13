@@ -1633,9 +1633,24 @@ def test_set_custom_request_header_patch_session():
 
 
 @pytest.mark.asyncio
-async def test_posting_async_with_custom_header():
+async def test_posting_async_with_custom_header(loop, session):
+    response = ClientResponse('post', URL('http://localhost/api/leases'),
+                              request_info=mock.Mock(),
+                              writer=mock.Mock(),
+                              continue100=None,
+                              timer=TimerNoop(),
+                              traces=[],
+                              loop=loop,
+                              session=session,
+                              )
+
+    response._headers = {'Content-Type': 'application/vnd.api+json'}
+    response._body = json.dumps({'errors': [{'title': 'Internal server error'}]}).encode('UTF-8')
+    response.status = 500
+
     patcher = mock.patch('aiohttp.ClientSession.request')
     request_mock = patcher.start()
+    request_mock.return_value = response
     request_kwargs = {'headers': {'Foo': 'Bar', 'X-Test': 'test'}, 'something': 'else'}
     s = Session(
         'http://localhost/api',
@@ -1649,7 +1664,7 @@ async def test_posting_async_with_custom_header():
     a.active_status = 'pending'
     a.reference_number = 'test'
     a.valid_for.start_datetime = 'asdf'
-    with pytest.raises(AttributeError):
+    with pytest.raises(DocumentError):
         await a.commit()
 
     await s.close()
