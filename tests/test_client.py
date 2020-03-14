@@ -1775,8 +1775,6 @@ def test_history_get():
     patcher = mock.patch('requests.get')
     client_mock = patcher.start()
     # Session history will be disabled, if not explicitly enabled
-    # or log level set to DEBUG.
-    # Python loglevel is WARNING by default.
     s = Session(
         'http://localhost:8080',
         schema=api_schema_all,
@@ -1788,7 +1786,7 @@ def test_history_get():
     s = Session(
         'http://localhost:8080',
         schema=api_schema_all,
-        enable_history_at_loglevel='WARNING'
+        enable_history=True
     )
     s.get('leases')
     assert len(s.history) == 1
@@ -1817,7 +1815,7 @@ def test_history_post():
 
     patcher = mock.patch('requests.request')
     client_mock = patcher.start()
-    s = Session('http://localhost:8080', schema=leases, enable_history_at_loglevel='WARNING')
+    s = Session('http://localhost:8080', schema=leases, enable_history=True)
     client_mock.return_value = response
     a = s.create('leases')
     assert a.is_dirty
@@ -1868,7 +1866,7 @@ async def test_history_async_get(loop, session):
     patcher = mock.patch('aiohttp.ClientSession')
     client_mock = patcher.start()
     s = Session(
-        'http://localhost', schema=leases, enable_async=True, enable_history_at_loglevel='WARNING'
+        'http://localhost', schema=leases, enable_async=True, enable_history=True
     )
     client_mock().get.return_value = response
     with pytest.raises(DocumentError):
@@ -1910,7 +1908,7 @@ async def test_history_async_post(loop, session):
         'http://localhost:8080',
         schema=api_schema_all,
         enable_async=True,
-        enable_history_at_loglevel='WARNING'
+        enable_history=True
     )
     request_mock.return_value = response
     s.create('leases')

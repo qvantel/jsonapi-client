@@ -196,7 +196,7 @@ class Session:
                  request_kwargs: dict=None,
                  loop: 'AbstractEventLoop'=None,
                  use_relationship_iterator: bool=False,
-                 enable_history_at_loglevel: str='DEBUG') -> None:
+                 enable_history: bool=False) -> None:
         self._server: ParseResult
         self.enable_async = enable_async
 
@@ -216,7 +216,7 @@ class Session:
             import aiohttp
             self._aiohttp_session = aiohttp.ClientSession(loop=loop)
         self.use_relationship_iterator = use_relationship_iterator
-        self._enable_history = logger.isEnabledFor(getattr(logging, enable_history_at_loglevel))
+        self.enable_history = enable_history
         self.history = SessionHistory()
 
     def add_resources(self, *resources: 'ResourceObject') -> None:
@@ -552,7 +552,7 @@ class Session:
 
     def _append_to_session_history(self, url: str, http_method: str,
                                    response, send_json: dict=None):
-        if self._enable_history:
+        if self.enable_history:
             self.history.append(
                 SessionHistoryItem(self, url, http_method, response, send_json)
             )
