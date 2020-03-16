@@ -1963,7 +1963,7 @@ async def test_on_request_chunk_sent_async_hook():
     a.lease_id = '1'
     a.active_status = 'pending'
     a.reference_number = 'test'
-    with pytest.raises(ServerDisconnectedError):
+    with pytest.raises(ConnectionRefusedError):
         await a.commit()
     assert data_sent.called
     assert json.loads(data_sent.call_args[0][2].chunk) == {
