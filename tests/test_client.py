@@ -1950,7 +1950,7 @@ async def test_history_async_post(loop, session):
 async def test_on_request_chunk_sent_async_hook():
     data_sent = make_mocked_coro()
     s = Session(
-        'http://0.0.0.0:8080/api',
+        'http://localhost/api',
         schema=api_schema_all,
         enable_async=True,
         enable_history=True,
