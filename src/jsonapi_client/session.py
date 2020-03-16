@@ -196,7 +196,8 @@ class Session:
                  request_kwargs: dict=None,
                  loop: 'AbstractEventLoop'=None,
                  use_relationship_iterator: bool=False,
-                 enable_history: bool=False) -> None:
+                 enable_history: bool=False,
+                 event_hooks: dict=None) -> None:
         self._server: ParseResult
         self.enable_async = enable_async
 
@@ -214,10 +215,28 @@ class Session:
         self.schema: Schema = Schema(schema)
         if enable_async:
             import aiohttp
-            self._aiohttp_session = aiohttp.ClientSession(loop=loop)
+            self._prepare_async_event_hooks(event_hooks)
+            self._aiohttp_session = aiohttp.ClientSession(
+                loop=loop,
+                trace_configs=[self.trace_config]
+            )
+        else:
+            if event_hooks is not None:
+                hooks = self._request_kwargs.get('hooks', {})
+                hooks.update(**event_hooks)
+                self._request_kwargs['hooks'] = hooks
         self.use_relationship_iterator = use_relationship_iterator
         self.enable_history = enable_history
         self.history = SessionHistory()
+
+    def _prepare_async_event_hooks(self, event_hooks: dict=None) -> None:
+        import aiohttp
+        self.trace_config = aiohttp.TraceConfig()
+        if event_hooks is None:
+            return
+
+        for event, hook in event_hooks.items():
+            getattr(self.trace_config, event).append(hook)
 
     def add_resources(self, *resources: 'ResourceObject') -> None:
         """

@@ -3,7 +3,9 @@ from urllib.parse import urlparse
 from yarl import URL
 
 from aiohttp import ClientResponse
+from aiohttp.client_exceptions import ServerDisconnectedError
 from aiohttp.helpers import TimerNoop
+from aiohttp.test_utils import make_mocked_coro
 import jsonschema
 import pytest
 from requests import Response
@@ -1908,7 +1910,7 @@ async def test_history_async_post(loop, session):
         'http://localhost:8080',
         schema=api_schema_all,
         enable_async=True,
-        enable_history=True
+        enable_history=True,
     )
     request_mock.return_value = response
     s.create('leases')
@@ -1923,7 +1925,6 @@ async def test_history_async_post(loop, session):
 
     assert len(s.history) == 1
     latest = s.history.latest
-    print(latest)
     assert latest.url == 'http://localhost:8080/leases'
     assert latest.http_method == 'POST'
     assert latest.send_json == {
@@ -1943,3 +1944,77 @@ async def test_history_async_post(loop, session):
     latest.payload
     assert latest.content_length == len(response._body)
     assert latest.status_code == 500
+
+
+@pytest.mark.asyncio
+async def test_on_request_chunk_sent_async_hook():
+    data_sent = make_mocked_coro()
+    s = Session(
+        'http://0.0.0.0:8080/api',
+        schema=api_schema_all,
+        enable_async=True,
+        enable_history=True,
+        event_hooks={'on_request_chunk_sent': data_sent}
+    )
+
+    s.create('leases')
+    a = s.create('leases')
+    assert a.is_dirty
+    a.lease_id = '1'
+    a.active_status = 'pending'
+    a.reference_number = 'test'
+    with pytest.raises(ServerDisconnectedError):
+        await a.commit()
+    assert data_sent.called
+    assert json.loads(data_sent.call_args[0][2].chunk) == {
+        'data': {
+            'attributes': {
+                'active-status': 'pending',
+                'lease-id': '1',
+                'reference-number': 'test'
+            },
+            'relationships': {},
+            'type': 'leases'
+        }
+    }
+
+
+def test_set_event_hooks_for_requests():
+    """Event hooks for requests library is a keyword argument
+       so this test only tests that the request_kwargs are updated correctly.
+    """
+    # Hooks not set at all
+    s = Session(
+        'http://0.0.0.0:8080/api',
+        schema=api_schema_all
+    )
+    assert 'hooks' not in s._request_kwargs
+
+    # Hooks can be set from event_hooks
+    response_hook = Mock()
+    s = Session(
+        'http://0.0.0.0:8080/api',
+        schema=api_schema_all,
+        event_hooks={'response': response_hook}
+    )
+    assert 'hooks' in s._request_kwargs
+    assert s._request_kwargs.get('hooks') == {'response': response_hook}
+
+    # Hooks can be set also from kwargs
+    s = Session(
+        'http://0.0.0.0:8080/api',
+        schema=api_schema_all,
+        request_kwargs={'hooks': {'test': None}},
+        event_hooks={'response': response_hook}
+    )
+    assert 'hooks' in s._request_kwargs
+    assert s._request_kwargs.get('hooks') == {'response': response_hook, 'test': None}
+
+    # Hooks set only at kwargs
+    s = Session(
+        'http://0.0.0.0:8080/api',
+        schema=api_schema_all,
+        request_kwargs={'hooks': {'test': None}}
+    )
+    assert 'hooks' in s._request_kwargs
+    assert s._request_kwargs.get('hooks') == {'test': None}

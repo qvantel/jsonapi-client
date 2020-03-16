@@ -299,6 +299,33 @@ Session history for debugging
     s.history.latest.headers
 
 
+Event hooks
+------------------
+
+.. code-block:: python
+
+    # Another way to implement debugging is to use event hooks.
+    # The event hooks of the underlaying aiohttp or requests libraries can
+    # be used as such by passing them as event_hooks argument as a dict.
+
+    # For example if you want to print all the sent data on console at async mode, you can use the
+    # 'on_request_chunk_sent' event hook https://docs.aiohttp.org/en/stable/tracing_reference.html#aiohttp.TraceConfig.on_request_chunk_sent
+
+    import asyncio
+    async def sent(session, context, params):
+        print(f'sent {params.chunk}')
+
+    s = Session(
+        'http://0.0.0.0:8090/api',
+        enable_async=True,
+        schema=models_as_jsonschema,
+        event_hooks={'on_request_chunk_sent': sent}
+    )
+    await s.get('some-collection')
+    await s.close()
+
+    # On sychronous mode the available event hooks are listed here https://requests.readthedocs.io/en/master/user/advanced/#event-hooks
+
 Credits
 =======
 
