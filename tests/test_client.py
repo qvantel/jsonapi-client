@@ -2,8 +2,9 @@ from unittest.mock import Mock
 from urllib.parse import urlparse
 from yarl import URL
 
-from aiohttp import ClientResponse
+from aiohttp import ClientResponse, web
 from aiohttp.helpers import TimerNoop
+from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop, make_mocked_coro
 import jsonschema
 import pytest
 from requests import Response
@@ -1765,3 +1766,297 @@ async def test_error_handling_posting_async(loop, session):
 
     assert str(exp.value) == 'Could not POST (500): Internal server error'
     patcher.stop()
+
+
+def test_history_get():
+    response = Response()
+    response.url = URL('http://localhost:8080/leases')
+    response.request = mock.Mock()
+    response.headers = {'Content-Type': 'application/vnd.api+json'}
+    response._content = json.dumps({'data': []}).encode('UTF-8')
+    response.status_code = 200
+
+    patcher = mock.patch('requests.get')
+    client_mock = patcher.start()
+    # Session history will be disabled, if not explicitly enabled
+    s = Session(
+        'http://localhost:8080',
+        schema=api_schema_all,
+    )
+    client_mock.return_value = response
+    s.get('leases')
+    assert len(s.history) == 0
+
+    s = Session(
+        'http://localhost:8080',
+        schema=api_schema_all,
+        enable_history=True
+    )
+    s.get('leases')
+    assert len(s.history) == 1
+    assert s.history.latest == s.history[-1]
+    latest = s.history.latest
+    assert latest.url == 'http://localhost:8080/leases'
+    assert latest.http_method == 'GET'
+    assert latest.send_json is None
+    assert 'Content-Type' in latest.headers
+    # Just make sure that these properties execute
+    latest.response_content
+    latest.payload
+    assert latest.content_length == len(response._content)
+    assert latest.status_code == 200
+
+
+def test_history_post():
+    response = Response()
+    response.url = URL('http://localhost:8080/invalid')
+    response.request = mock.Mock()
+    response.headers = {'Content-Type': 'application/vnd.api+json'}
+    response._content = json.dumps(
+        {'errors': [{'title': 'Internal server error'}]}
+    ).encode('UTF-8')
+    response.status_code = 500
+
+    patcher = mock.patch('requests.request')
+    client_mock = patcher.start()
+    s = Session('http://localhost:8080', schema=leases, enable_history=True)
+    client_mock.return_value = response
+    a = s.create('leases')
+    assert a.is_dirty
+    a.lease_id = '1'
+    a.active_status = 'pending'
+    a.reference_number = 'test'
+    with pytest.raises(DocumentError):
+        a.commit()
+
+    assert len(s.history) == 1
+    latest = s.history.latest
+    assert latest.url == 'http://localhost:8080/leases'
+    assert latest.http_method == 'POST'
+    assert latest.send_json == {
+        'data': {
+            'attributes': {
+                'active-status': 'pending',
+                'lease-id': '1',
+                'reference-number': 'test'
+            },
+            'relationships': {},
+            'type': 'leases'
+        }
+    }
+    assert 'Content-Type' in latest.headers
+    # Just make sure that these properties execute
+    latest.response_content
+    latest.payload
+    assert latest.content_length == len(response._content)
+    assert latest.status_code == 500
+
+
+@pytest.mark.asyncio
+async def test_history_async_get(loop, session):
+    response = ClientResponse('get', URL('http://localhost/invalid'),
+                              request_info=mock.Mock(),
+                              writer=mock.Mock(),
+                              continue100=None,
+                              timer=TimerNoop(),
+                              traces=[],
+                              loop=loop,
+                              session=session,
+                              )
+    response._headers = {'Content-Type': 'application/vnd.api+json'}
+    response._body = json.dumps({'errors': [{'title': 'Resource not found'}]}).encode('UTF-8')
+    response.status = 404
+
+    patcher = mock.patch('aiohttp.ClientSession')
+    client_mock = patcher.start()
+    s = Session(
+        'http://localhost', schema=leases, enable_async=True, enable_history=True
+    )
+    client_mock().get.return_value = response
+    with pytest.raises(DocumentError):
+        await s.get('invalid')
+
+    patcher.stop()
+
+    assert len(s.history) == 1
+    latest = s.history.latest
+    assert latest.url == 'http://localhost/invalid'
+    assert latest.http_method == 'GET'
+    assert latest.send_json is None
+    assert 'Content-Type' in latest.headers
+    # Just make sure that these properties execute
+    latest.response_content
+    latest.payload
+    assert latest.content_length == len(response._body)
+    assert latest.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_history_async_post(loop, session):
+    response = ClientResponse('post', URL('http://localhost:8080/leases'),
+                              request_info=mock.Mock(),
+                              writer=mock.Mock(),
+                              continue100=None,
+                              timer=TimerNoop(),
+                              traces=[],
+                              loop=loop,
+                              session=session,
+                              )
+    response._headers = {'Content-Type': 'application/vnd.api+json'}
+    response._body = json.dumps({'errors': [{'title': 'Internal server error'}]}).encode('UTF-8')
+    response.status = 500
+
+    patcher = mock.patch('aiohttp.ClientSession.request')
+    request_mock = patcher.start()
+    s = Session(
+        'http://localhost:8080',
+        schema=api_schema_all,
+        enable_async=True,
+        enable_history=True,
+    )
+    request_mock.return_value = response
+    s.create('leases')
+    a = s.create('leases')
+    assert a.is_dirty
+    a.lease_id = '1'
+    a.active_status = 'pending'
+    a.reference_number = 'test'
+    with pytest.raises(DocumentError):
+        await a.commit()
+    patcher.stop()
+
+    assert len(s.history) == 1
+    latest = s.history.latest
+    assert latest.url == 'http://localhost:8080/leases'
+    assert latest.http_method == 'POST'
+    assert latest.send_json == {
+        'data': {
+            'attributes': {
+                'active-status': 'pending',
+                'lease-id': '1',
+                'reference-number': 'test'
+            },
+            'relationships': {},
+            'type': 'leases'
+        }
+    }
+    assert 'Content-Type' in latest.headers
+    # Just make sure that these properties execute
+    latest.response_content
+    latest.payload
+    assert latest.content_length == len(response._body)
+    assert latest.status_code == 500
+
+
+def test_set_event_hooks_for_requests():
+    """Event hooks for requests library is a keyword argument
+       so this test only tests that the request_kwargs are updated correctly.
+    """
+    # Hooks not set at all
+    s = Session(
+        'http://0.0.0.0:8080/api',
+        schema=api_schema_all
+    )
+    assert 'hooks' not in s._request_kwargs
+
+    # Hooks can be set from event_hooks
+    response_hook = Mock()
+    s = Session(
+        'http://0.0.0.0:8080/api',
+        schema=api_schema_all,
+        event_hooks={'response': response_hook}
+    )
+    assert 'hooks' in s._request_kwargs
+    assert s._request_kwargs.get('hooks') == {'response': response_hook}
+
+    # Hooks can be set also from kwargs
+    s = Session(
+        'http://0.0.0.0:8080/api',
+        schema=api_schema_all,
+        request_kwargs={'hooks': {'test': None}},
+        event_hooks={'response': response_hook}
+    )
+    assert 'hooks' in s._request_kwargs
+    assert s._request_kwargs.get('hooks') == {'response': response_hook, 'test': None}
+
+    # Hooks set only at kwargs
+    s = Session(
+        'http://0.0.0.0:8080/api',
+        schema=api_schema_all,
+        request_kwargs={'hooks': {'test': None}}
+    )
+    assert 'hooks' in s._request_kwargs
+    assert s._request_kwargs.get('hooks') == {'test': None}
+
+
+class TestEventHooks(AioHTTPTestCase):
+    async def get_application(self):
+        async def leases_create(request):
+            headers = {'Content-Type': 'application/vnd.api+json'}
+            data = {'errors': [{'title': 'Internal server error'}]}
+            data = json.dumps(data)
+            return web.Response(body=data, status=500, headers=headers)
+
+        app = web.Application()
+        app.router.add_post('/api/leases', leases_create)
+        return app
+
+    @unittest_run_loop
+    async def test_on_request_chunk_sent_async_hook(self):
+        data_sent = make_mocked_coro()
+
+        url = f'http://{self.server.host}:{self.server.port}/api'
+        s = Session(
+            url,
+            schema=api_schema_all,
+            enable_async=True,
+            enable_history=True,
+            event_hooks={'on_request_chunk_sent': data_sent}
+        )
+
+        s.create('leases')
+        a = s.create('leases')
+        assert a.is_dirty
+        a.lease_id = '1'
+        a.active_status = 'pending'
+        a.reference_number = 'test'
+        with pytest.raises(DocumentError):
+            await a.commit()
+        assert data_sent.called
+        assert json.loads(data_sent.call_args[0][2].chunk) == {
+            'data': {
+                'attributes': {
+                    'active-status': 'pending',
+                    'lease-id': '1',
+                    'reference-number': 'test'
+                },
+                'relationships': {},
+                'type': 'leases'
+            }
+        }
+
+    @unittest_run_loop
+    async def test_on_response_chunk_received_async_hook(self):
+        data_received = make_mocked_coro()
+
+        url = f'http://{self.server.host}:{self.server.port}/api'
+        s = Session(
+            url,
+            schema=api_schema_all,
+            enable_async=True,
+            enable_history=True,
+            event_hooks={'on_response_chunk_received': data_received}
+        )
+
+        s.create('leases')
+        a = s.create('leases')
+        assert a.is_dirty
+        a.lease_id = '1'
+        a.active_status = 'pending'
+        a.reference_number = 'test'
+        with pytest.raises(DocumentError):
+            await a.commit()
+        assert data_received.called
+        assert json.loads(data_received.call_args[0][2].chunk) == {
+            'errors': [{'title': 'Internal server error'}]
+        }

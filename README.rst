@@ -273,6 +273,59 @@ Deleting resources
     cust1.commit() # Actually delete
 
 
+Session history for debugging
+------------------
+
+.. code-block:: python
+
+    # You can use session history to debug http requests.
+    # Session history will be enabled by initialising session with enable_history=True parameter.
+
+    # Session history will be enabled by: (Python log level is WARNING by default)
+    s = Session('http://localhost:8080/', schema=models_as_jsonschema,
+                enable_history=True)
+
+    # Session history is a list of session history items.
+    # You can see the information about the request and response
+    # For example
+    s.history.latest
+    # will print out some data about the latest request
+    # That actually equals to
+    s.history[-1]
+
+    # You can see the latest server response by
+    print(s.history.latest.response_content)
+    # or to see the response headers
+    s.history.latest.headers
+
+
+Event hooks
+------------------
+
+.. code-block:: python
+
+    # Another way to implement debugging is to use event hooks.
+    # The event hooks of the underlaying aiohttp or requests libraries can
+    # be used as such by passing them as event_hooks argument as a dict.
+
+    # For example if you want to print all the sent data on console at async mode, you can use the
+    # 'on_request_chunk_sent' event hook https://docs.aiohttp.org/en/stable/tracing_reference.html#aiohttp.TraceConfig.on_request_chunk_sent
+
+    import asyncio
+    async def sent(session, context, params):
+        print(f'sent {params.chunk}')
+
+    s = Session(
+        'http://0.0.0.0:8090/api',
+        enable_async=True,
+        schema=models_as_jsonschema,
+        event_hooks={'on_request_chunk_sent': sent}
+    )
+    await s.get('some-collection')
+    await s.close()
+
+    # On sychronous mode the available event hooks are listed here https://requests.readthedocs.io/en/master/user/advanced/#event-hooks
+
 Credits
 =======
 
