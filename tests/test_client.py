@@ -2,10 +2,9 @@ from unittest.mock import Mock
 from urllib.parse import urlparse
 from yarl import URL
 
-from aiohttp import ClientResponse
-from aiohttp.client_exceptions import ServerDisconnectedError
+from aiohttp import ClientResponse, web
 from aiohttp.helpers import TimerNoop
-from aiohttp.test_utils import make_mocked_coro
+from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop, make_mocked_coro
 import jsonschema
 import pytest
 from requests import Response
@@ -1946,39 +1945,6 @@ async def test_history_async_post(loop, session):
     assert latest.status_code == 500
 
 
-@pytest.mark.asyncio
-async def test_on_request_chunk_sent_async_hook():
-    data_sent = make_mocked_coro()
-    s = Session(
-        'http://localhost/api',
-        schema=api_schema_all,
-        enable_async=True,
-        enable_history=True,
-        event_hooks={'on_request_chunk_sent': data_sent}
-    )
-
-    s.create('leases')
-    a = s.create('leases')
-    assert a.is_dirty
-    a.lease_id = '1'
-    a.active_status = 'pending'
-    a.reference_number = 'test'
-    with pytest.raises(ConnectionRefusedError):
-        await a.commit()
-    assert data_sent.called
-    assert json.loads(data_sent.call_args[0][2].chunk) == {
-        'data': {
-            'attributes': {
-                'active-status': 'pending',
-                'lease-id': '1',
-                'reference-number': 'test'
-            },
-            'relationships': {},
-            'type': 'leases'
-        }
-    }
-
-
 def test_set_event_hooks_for_requests():
     """Event hooks for requests library is a keyword argument
        so this test only tests that the request_kwargs are updated correctly.
@@ -2018,3 +1984,76 @@ def test_set_event_hooks_for_requests():
     )
     assert 'hooks' in s._request_kwargs
     assert s._request_kwargs.get('hooks') == {'test': None}
+
+
+class TestEventHooks(AioHTTPTestCase):
+    async def get_application(self):
+        async def leases_create(request):
+            headers = {'Content-Type': 'application/vnd.api+json'}
+            data = {'errors': [{'title': 'Internal server error'}]}
+            data = json.dumps(data)
+            return web.Response(body=data, status=500, headers=headers)
+
+        app = web.Application()
+        app.router.add_post('/api/leases', leases_create)
+        return app
+
+    @unittest_run_loop
+    async def test_on_request_chunk_sent_async_hook(self):
+        data_sent = make_mocked_coro()
+
+        url = f'http://{self.server.host}:{self.server.port}/api'
+        s = Session(
+            url,
+            schema=api_schema_all,
+            enable_async=True,
+            enable_history=True,
+            event_hooks={'on_request_chunk_sent': data_sent}
+        )
+
+        s.create('leases')
+        a = s.create('leases')
+        assert a.is_dirty
+        a.lease_id = '1'
+        a.active_status = 'pending'
+        a.reference_number = 'test'
+        with pytest.raises(DocumentError):
+            await a.commit()
+        assert data_sent.called
+        assert json.loads(data_sent.call_args[0][2].chunk) == {
+            'data': {
+                'attributes': {
+                    'active-status': 'pending',
+                    'lease-id': '1',
+                    'reference-number': 'test'
+                },
+                'relationships': {},
+                'type': 'leases'
+            }
+        }
+
+    @unittest_run_loop
+    async def test_on_response_chunk_received_async_hook(self):
+        data_received = make_mocked_coro()
+
+        url = f'http://{self.server.host}:{self.server.port}/api'
+        s = Session(
+            url,
+            schema=api_schema_all,
+            enable_async=True,
+            enable_history=True,
+            event_hooks={'on_response_chunk_received': data_received}
+        )
+
+        s.create('leases')
+        a = s.create('leases')
+        assert a.is_dirty
+        a.lease_id = '1'
+        a.active_status = 'pending'
+        a.reference_number = 'test'
+        with pytest.raises(DocumentError):
+            await a.commit()
+        assert data_received.called
+        assert json.loads(data_received.call_args[0][2].chunk) == {
+            'errors': [{'title': 'Internal server error'}]
+        }
