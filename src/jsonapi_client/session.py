@@ -123,7 +123,8 @@ class Session:
                  schema: dict=None,
                  request_kwargs: dict=None,
                  loop: 'AbstractEventLoop'=None,
-                 use_relationship_iterator: bool=False,) -> None:
+                 use_relationship_iterator: bool=False,
+                 trailing_slash=False,) -> None:
         self._server: ParseResult
         self.enable_async = enable_async
 
@@ -143,6 +144,7 @@ class Session:
             import aiohttp
             self._aiohttp_session = aiohttp.ClientSession(loop=loop)
         self.use_relationship_iterator = use_relationship_iterator
+        self.trailing_slash = '/' if trailing_slash else ''
 
     def add_resources(self, *resources: 'ResourceObject') -> None:
         """
@@ -151,6 +153,8 @@ class Session:
         for res in resources:
             self.resources_by_resource_identifier[(res.type, res.id)] = res
             lnk = res.links.self.url if res.links.self else res.url
+            if self.trailing_slash and not lnk.endswith(self.trailing_slash):
+                lnk = lnk + '/'
             if lnk:
                 self.resources_by_link[lnk] = res
 
@@ -312,9 +316,9 @@ class Session:
     def _url_for_resource(self, resource_type: str,
                           resource_id: str=None,
                           filter: 'Modifier'=None) -> str:
-        url = f'{self.url_prefix}/{resource_type}'
+        url = f'{self.url_prefix}/{resource_type}{self.trailing_slash}'
         if resource_id is not None:
-            url = f'{url}/{resource_id}'
+            url = f'{url}/{resource_id}{self.trailing_slash}'
         if filter:
             url = filter.url_with_modifiers(url)
         return url
