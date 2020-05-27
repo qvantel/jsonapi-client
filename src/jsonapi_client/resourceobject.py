@@ -1,5 +1,5 @@
 """
-JSON API Python client 
+JSON API Python client
 https://github.com/qvantel/jsonapi-client
 
 (see JSON API specification in http://jsonapi.org/)
@@ -277,7 +277,7 @@ class RelationshipDict(dict):
         """
         From data and/or provided relation_type, determine Relationship class
         to be used.
-        
+
         :param data: Source data dictionary
         :param relation_type: either 'to-one' or 'to-many'
         """
@@ -474,7 +474,7 @@ class ResourceObject(AbstractJsonObject):
     @property
     def url(self) -> str:
         url = str(self.links.self)
-        return url or self.id and f'{self.session.url_prefix}/{self.type}/{self.id}'
+        return url or self.id and f'{self.session.url_prefix}/{self.type}/{self.id}/{self.session.trailing_slash}'
 
     @property
     def post_url(self) -> str:
