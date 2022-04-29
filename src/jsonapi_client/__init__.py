@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import pkg_resources
 
 from .session import Session
-from .filter import Filter, Inclusion, Modifier
+from .filter import Filter, Inclusion, Modifier, Sort
 from .common import ResourceTuple
 
 __version__ = pkg_resources.get_distribution("jsonapi-client").version
