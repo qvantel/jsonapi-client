@@ -10,13 +10,13 @@ from requests import Response
 import json
 import os
 from jsonschema import ValidationError
-from jsonapi_client import ResourceTuple
-import jsonapi_client.objects
-import jsonapi_client.relationships
-import jsonapi_client.resourceobject
-from jsonapi_client.exceptions import DocumentError, AsyncError
-from jsonapi_client.filter import Filter
-from jsonapi_client.session import Session
+from nb_jsonapi_client import ResourceTuple
+import nb_jsonapi_client.objects
+import nb_jsonapi_client.relationships
+import nb_jsonapi_client.resourceobject
+from nb_jsonapi_client.exceptions import DocumentError, AsyncError
+from nb_jsonapi_client.filter import Filter
+from nb_jsonapi_client.session import Session
 from unittest import mock
 
 
@@ -172,11 +172,11 @@ def load(filename):
 
 
 
-#mock_fetch_cm = async_mock.patch('jsonapi_client.session.fetch_json', new_callable=MockedFetch)
+#mock_fetch_cm = async_mock.patch('nb_jsonapi_client.session.fetch_json', new_callable=MockedFetch)
 
 @pytest.fixture
 def mock_req(mocker):
-    m1 = mocker.patch('jsonapi_client.session.Session.http_request')
+    m1 = mocker.patch('nb_jsonapi_client.session.Session.http_request')
     m1.return_value = (201, {}, 'location')
     return m1
 
@@ -190,7 +190,7 @@ def mock_req_async(mocker):
             super().__call__(*args)
             return rv
 
-    m2 = mocker.patch('jsonapi_client.session.Session.http_request_async', new_callable=MockedReqAsync)
+    m2 = mocker.patch('nb_jsonapi_client.session.Session.http_request_async', new_callable=MockedReqAsync)
     return m2
 
 
@@ -210,14 +210,14 @@ def mocked_fetch(mocker):
         async def __call__(self, url):
             return mock_fetch(url)
 
-    m1 = mocker.patch('jsonapi_client.session.Session._fetch_json', new_callable=MockedFetch)
-    m2 = mocker.patch('jsonapi_client.session.Session._fetch_json_async', new_callable=MockedFetchAsync)
+    m1 = mocker.patch('nb_jsonapi_client.session.Session._fetch_json', new_callable=MockedFetch)
+    m2 = mocker.patch('nb_jsonapi_client.session.Session._fetch_json_async', new_callable=MockedFetchAsync)
     return
 
 
 @pytest.fixture
 def mock_update_resource(mocker):
-    m = mocker.patch('jsonapi_client.resourceobject.ResourceObject._update_resource')
+    m = mocker.patch('nb_jsonapi_client.resourceobject.ResourceObject._update_resource')
     return m
 
 
@@ -345,7 +345,7 @@ async def test_relationships_iterator_async(mocked_fetch, article_schema):
     doc = await s.get('articles')
     article, article2, article3 = doc.resources
     comments = article.comments
-    assert isinstance(comments, jsonapi_client.relationships.MultiRelationship)
+    assert isinstance(comments, nb_jsonapi_client.relationships.MultiRelationship)
     assert len(comments._resource_identifiers) == 2
 
 
@@ -356,7 +356,7 @@ async def test_relationships_single_async(mocked_fetch, article_schema):
     article, article2, article3 = doc.resources
 
     author = article.author
-    assert isinstance(author, jsonapi_client.relationships.SingleRelationship)
+    assert isinstance(author, nb_jsonapi_client.relationships.SingleRelationship)
     with pytest.raises(AsyncError):
         _ = author.resource
 
@@ -372,7 +372,7 @@ async def test_relationships_single_async(mocked_fetch, article_schema):
     assert author.links.self.href == "http://example.com/articles/1/relationships/author"
 
     author = article.author.resource
-    assert isinstance(author, jsonapi_client.resourceobject.ResourceObject)
+    assert isinstance(author, nb_jsonapi_client.resourceobject.ResourceObject)
     assert author.first_name == 'Dan'
     assert author.last_name == 'Gebhardt'
     assert author.links.self.href == "http://example.com/people/9"
@@ -402,7 +402,7 @@ def test_relationships_multi(mocked_fetch, article_schema):
     assert c1 == comments[0]
     assert c2 == comments[1]
 
-    assert isinstance(c1, jsonapi_client.resourceobject.ResourceObject)
+    assert isinstance(c1, nb_jsonapi_client.resourceobject.ResourceObject)
     assert 'body' in dir(c1)
     assert c1.body == "First!"
 
@@ -427,16 +427,16 @@ async def test_relationships_multi_async(mocked_fetch, article_schema):
     doc = await s.get('articles')
     article = doc.resource
     comments = article.comments
-    assert isinstance(comments, jsonapi_client.relationships.MultiRelationship)
+    assert isinstance(comments, nb_jsonapi_client.relationships.MultiRelationship)
     assert len(comments._resource_identifiers) == 2
 
     c1, c2 = await comments.fetch()
 
-    assert isinstance(c1, jsonapi_client.resourceobject.ResourceObject)
+    assert isinstance(c1, nb_jsonapi_client.resourceobject.ResourceObject)
     assert 'body' in dir(c1)
     assert c1.body == "First!"
 
-    assert isinstance(c1.author, jsonapi_client.relationships.SingleRelationship)
+    assert isinstance(c1.author, nb_jsonapi_client.relationships.SingleRelationship)
 
     assert c2.body == 'I like XML better'
     with pytest.raises(AsyncError):
@@ -448,7 +448,7 @@ async def test_relationships_multi_async(mocked_fetch, article_schema):
     assert author_res.last_name == 'Gebhardt'
 
     rel = article.comments_or_authors
-    assert isinstance(rel, jsonapi_client.relationships.MultiRelationship)
+    assert isinstance(rel, nb_jsonapi_client.relationships.MultiRelationship)
     await rel.fetch()
     res1, res2 = rel.resources
 
@@ -491,7 +491,7 @@ async def test_fetch_external_resources_async(mocked_fetch, article_schema):
     doc = await s.get('articles')
     article = doc.resource
     comments = article.comments
-    assert isinstance(comments, jsonapi_client.relationships.MultiRelationship)
+    assert isinstance(comments, nb_jsonapi_client.relationships.MultiRelationship)
     session = article.session
     c1, c2 = await comments.fetch()
     assert c1.body == "First!"
@@ -520,7 +520,7 @@ def test_error_404(mocked_fetch, api_schema):
     d1 = documents.resources[1]
 
     parent_lease = d1.relationships.parent_lease
-    assert isinstance(parent_lease, jsonapi_client.relationships.LinkRelationship)
+    assert isinstance(parent_lease, nb_jsonapi_client.relationships.LinkRelationship)
     with pytest.raises(DocumentError) as e:
         assert parent_lease.resource.active_status == 'active'
     assert e.value.errors['status_code'] == 404
@@ -538,7 +538,7 @@ async def test_error_404_async(mocked_fetch, api_schema):
     d1 = documents.resources[1]
 
     parent_lease = d1.parent_lease
-    assert isinstance(parent_lease, jsonapi_client.relationships.LinkRelationship)
+    assert isinstance(parent_lease, nb_jsonapi_client.relationships.LinkRelationship)
     with pytest.raises(AsyncError):
         _ = parent_lease.resource.active_status
 
@@ -584,7 +584,7 @@ def test_relationships_with_context_manager(mocked_fetch, api_schema):
         assert ext_ref.type == 'external-references'
 
         ext_ref = d1.external_references[0]
-        assert isinstance(ext_ref, jsonapi_client.resourceobject.ResourceObject)
+        assert isinstance(ext_ref, nb_jsonapi_client.resourceobject.ResourceObject)
 
         assert ext_ref.reference_id == '0123015150'
         assert ext_ref.id == 'qvantel-lease1-extref'
@@ -599,7 +599,7 @@ def test_relationships_with_context_manager(mocked_fetch, api_schema):
         # Single relationship (using link rather than ResourceObject)
         # Fetches http://localhost:8080/api/leases/qvantel-lease1/parent-lease
         parent_lease = d1.parent_lease
-        #assert isinstance(parent_lease, jsonapi_client.relationships.LinkRelationship)
+        #assert isinstance(parent_lease, nb_jsonapi_client.relationships.LinkRelationship)
         # ^ Anything is not fetched yet
         if api_schema:
             assert parent_lease.active_status == 'active'
@@ -634,7 +634,7 @@ async def test_relationships_with_context_manager_async_async(mocked_fetch, api_
         assert ext_ref_res.id == 'qvantel-lease1-extref'
         assert ext_ref_res.type == 'external-references'
 
-        assert isinstance(ext_ref_res, jsonapi_client.resourceobject.ResourceObject)
+        assert isinstance(ext_ref_res, nb_jsonapi_client.resourceobject.ResourceObject)
 
         assert ext_ref_res.reference_id == '0123015150'
         assert ext_ref_res.id == 'qvantel-lease1-extref'
@@ -679,7 +679,7 @@ def test_more_relationships(mocked_fetch, api_schema):
     assert ext_ref.type == 'external-references'
 
     ext_ref = d1.external_references[0]
-    assert isinstance(ext_ref, jsonapi_client.resourceobject.ResourceObject)
+    assert isinstance(ext_ref, nb_jsonapi_client.resourceobject.ResourceObject)
 
     assert ext_ref.reference_id == '0123015150'
     assert ext_ref.id == 'qvantel-lease1-extref'
@@ -714,7 +714,7 @@ async def test_more_relationships_async_fetch(mocked_fetch, api_schema):
     # fetches http://localhost:8080/api/leases/qvantel-lease1/external-references
 
     ext_ref = d1.external_references
-    assert isinstance(ext_ref, jsonapi_client.relationships.LinkRelationship)
+    assert isinstance(ext_ref, nb_jsonapi_client.relationships.LinkRelationship)
 
     with pytest.raises(AsyncError):
         len(ext_ref.resources) == 1
@@ -730,7 +730,7 @@ async def test_more_relationships_async_fetch(mocked_fetch, api_schema):
     assert ext_ref_res.type == 'external-references'
 
     ext_ref = d1.external_references.resources[0]
-    assert isinstance(ext_ref, jsonapi_client.resourceobject.ResourceObject)
+    assert isinstance(ext_ref, nb_jsonapi_client.resourceobject.ResourceObject)
 
     assert ext_ref.reference_id == '0123015150'
     assert ext_ref.id == 'qvantel-lease1-extref'
@@ -745,7 +745,7 @@ async def test_more_relationships_async_fetch(mocked_fetch, api_schema):
     # Single relationship (using link rather than ResourceObject)
     # Fetches http://localhost:8080/api/leases/qvantel-lease1/parent-lease
     parent_lease = d1.parent_lease
-    assert isinstance(parent_lease, jsonapi_client.relationships.LinkRelationship)
+    assert isinstance(parent_lease, nb_jsonapi_client.relationships.LinkRelationship)
     # ^ Anything is not fetched yet
     await parent_lease.fetch()
     assert parent_lease.resource.active_status == 'active'
@@ -1017,7 +1017,7 @@ def test_posting_successfull(mock_req):
     a.reference_number = 'test'
     a.valid_for.start_datetime = 'asdf'
 
-    with mock.patch('jsonapi_client.session.Session.read'):
+    with mock.patch('nb_jsonapi_client.session.Session.read'):
         a.commit()
 
     agr_data = \
@@ -1060,7 +1060,7 @@ async def test_posting_successfull_async(mock_req_async, mock_update_resource):
 @pytest.mark.parametrize('commit', [0, 1])
 @pytest.mark.parametrize('kw_format', [0, 1])
 def test_posting_successfull_with_predefined_fields(kw_format, commit, mock_req, mocker):
-    mocker.patch('jsonapi_client.session.Session.read')
+    mocker.patch('nb_jsonapi_client.session.Session.read')
     s = Session('http://localhost:80801/api', schema=api_schema_all)
 
     kwargs1 = dict(valid_for__start_datetime='asdf')
@@ -1078,7 +1078,7 @@ def test_posting_successfull_with_predefined_fields(kw_format, commit, mock_req,
     assert a.is_dirty != commit
 
     if not commit:
-        with mock.patch('jsonapi_client.session.Session.read'):
+        with mock.patch('nb_jsonapi_client.session.Session.read'):
             a.commit()
 
     agr_data = \
@@ -1111,14 +1111,14 @@ def test_create_with_default(mock_req):
     assert a.testfield1 == 'test'
     assert a.testfield2 == 'test'
 
-    with mock.patch('jsonapi_client.session.Session.read'):
+    with mock.patch('nb_jsonapi_client.session.Session.read'):
         a.commit()
 
     a2 = s.create('articles', fields={'testfield1': 'test'})
     assert a2.testfield1 == 'test'
     assert a2.testfield2 == 'default'
 
-    with mock.patch('jsonapi_client.session.Session.read'):
+    with mock.patch('nb_jsonapi_client.session.Session.read'):
         a2.commit()
 
 underscore_schema = \
@@ -1140,7 +1140,7 @@ def test_create_with_underscore(mock_req):
     assert 'with_underscore' in a._attributes
     assert 'with-dash' in a._attributes
 
-    with mock.patch('jsonapi_client.session.Session.read'):
+    with mock.patch('nb_jsonapi_client.session.Session.read'):
         a.commit()
 
 
@@ -1152,7 +1152,7 @@ def test_create_with_underscore2(mock_req):
     assert 'with_underscore' in a._attributes
     assert 'with-dash' in a._attributes
 
-    with mock.patch('jsonapi_client.session.Session.read'):
+    with mock.patch('nb_jsonapi_client.session.Session.read'):
         a.commit()
 
 
@@ -1167,7 +1167,7 @@ def test_posting_relationships(mock_req, article_schema):
             author=ResourceTuple('9', 'people'),
             comments_or_authors=[ResourceTuple('9', 'people'), ResourceTuple('12', 'comments')]
     )
-    with mock.patch('jsonapi_client.session.Session.read'):
+    with mock.patch('nb_jsonapi_client.session.Session.read'):
         a.commit()
 
 
@@ -1182,7 +1182,7 @@ def test_posting_with_null_to_one_relationship(mock_req, article_schema):
             author=None,
             comments_or_authors=[]
     )
-    with mock.patch('jsonapi_client.session.Session.read'):
+    with mock.patch('nb_jsonapi_client.session.Session.read'):
         a.commit()
 
 

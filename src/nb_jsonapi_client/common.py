@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import asyncio
 import logging
 from typing import Union, TYPE_CHECKING, NamedTuple
+import pprint
 
 if TYPE_CHECKING:
     from .session import Session
@@ -99,18 +100,20 @@ class AbstractJsonObject:
 
 def error_from_response(response_content):
     try:
-        error_str = response_content['errors'][0]['title']
+        # error_str = response_content['errors'][0]['title']
+        # error_str = f"{response_content['code']}: {response_content['message']}"
+        error_str = pprint.pformat(response_content)
     except Exception:
         error_str = '?'
     return error_str
 
 
 def jsonify_attribute_name(name):
-    return name.replace('__', '.').replace('_', '-')
+    return name.replace('__', '.')
 
 
 def dejsonify_attribute_name(name):
-    return name.replace('.', '__').replace('-', '_')
+    return name.replace('.', '__')
 
 
 def jsonify_attribute_names(iterable):

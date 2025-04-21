@@ -35,4 +35,4 @@ from .session import Session
 from .filter import Filter, Inclusion, Modifier
 from .common import ResourceTuple
 
-__version__ = pkg_resources.get_distribution("jsonapi-client").version
+__version__ = pkg_resources.get_distribution("nb-jsonapi-client").version

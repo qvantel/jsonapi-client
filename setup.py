@@ -1,9 +1,9 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="jsonapi_client",
+    name="nb-jsonapi-client",
     version='0.9.9',
-    description="Comprehensive, yet easy-to-use, pythonic, ORM-like access to JSON API services",
+    description="Comprehensive, yet easy-to-use, pythonic, ORM-like access to JSON API services on NationBuilder",
     long_description=(open("README.rst").read() + "\n" +
                       open("CHANGES.rst").read()),
     classifiers=[
@@ -12,10 +12,10 @@ setup(
         "Topic :: Software Development :: Libraries",
         "License :: OSI Approved :: BSD License",
     ],
-    author="Tuomas Airaksinen",
-    author_email="tuomas.airaksinen@qvantel.com",
-    url="https://github.com/qvantel/jsonapi-client",
-    keywords="JSONAPI JSON API client",
+    author="Dennis Hennen",
+    author_email="dsh@dsh.org",
+    url="https://github.com/dsh/nb-jsonapi-client",
+    keywords="JSONAPI JSON API client NationBuilder",
     license="BSD-3",
     package_dir={"": "src"},
     packages=find_packages("src"),

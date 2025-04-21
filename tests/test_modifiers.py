@@ -1,4 +1,4 @@
-from jsonapi_client.filter import Inclusion, Modifier
+from nb_jsonapi_client.filter import Inclusion, Modifier
 
 
 def test_modifier():

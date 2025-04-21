@@ -50,7 +50,7 @@ Client session
 
 .. code-block:: python
 
-   from jsonapi_client import Session, Filter, ResourceTuple
+   from nb_jsonapi_client import Session, Filter, ResourceTuple
 
    s = Session('http://localhost:8080/')
    # To start session in async mode

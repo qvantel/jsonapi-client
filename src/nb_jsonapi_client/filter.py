@@ -30,11 +30,49 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from typing import TYPE_CHECKING, Union, Dict, Sequence
+from typing import TYPE_CHECKING, Union, Dict, Sequence, Tuple
+from enum import Enum
+
+class FilterOperator(Enum):
+    EQ = "EQ" # case insensitive - default if omitted
+    NOT_EQ = "not_eq" # case insensitive
+    EQL = "eql" # case sensitive 
+    NOT_EQL = "not_eql" # case sensitive
+    PREFIX = "prefix"
+    NOT_PREFIX = "not_prefix"
+    SUFFIX = "suffix"
+    NOT_SUFFIX = "not_suffix"
+    MATCH = "match"
+    NOT_MATCH = "not_match"
+    GT = "gt"
+    GTE = "gte"
+    LT = "lt"
+    LTE = "lte"
+
+EQ = FilterOperator.EQ
+NOT_EQ = FilterOperator.NOT_EQ
+EQL = FilterOperator.EQL
+NOT_EQL = FilterOperator.NOT_EQL
+PREFIX = FilterOperator.PREFIX
+NOT_PREFIX = FilterOperator.NOT_PREFIX
+SUFFIX = FilterOperator.SUFFIX
+NOT_SUFFIX = FilterOperator.NOT_SUFFIX
+MATCH = FilterOperator.MATCH
+NOT_MATCH = FilterOperator.NOT_MATCH
+GT = FilterOperator.GT
+GTE = FilterOperator.GTE
+LT = FilterOperator.LT
+LTE = FilterOperator.LTE
+
+EXISTS = (NOT_EQ, None)
+NOT_EXISTS = (EQ, None)
+
 
 if TYPE_CHECKING:
-    FilterKeywords = Dict[str, Union[str, Sequence[Union[str, int, float]]]]
+    FilterKeywords = Dict[str, Union[str, None, Sequence[Union[None, str, int, float, Tuple[FilterOperator, Union[None, str, int, float]]]]]]
     IncludeKeywords = Sequence[str]
+    FieldKeywords  = Dict[str, Sequence[str]]
+
 
 
 class Modifier:
@@ -108,11 +146,29 @@ class Filter(Modifier):
         Filter class that implements url filtering scheme according to JSONAPI
         recommendations (http://jsonapi.org/recommendations/)
         """
-        def jsonify_key(key):
-            return key.replace('__', '.').replace('_', '-')
-        return '&'.join(f'filter[{jsonify_key(key)}]={value}'
+        return '&'.join(f'filter[{key}]={value}'
                         for key, value in kwargs.items())
 
+    def format_filter_query(self, **kwargs: 'FilterKeywords') -> str:
+        """
+        Filter class that implements URL filtering scheme according to JSONAPI
+        recommendations (http://jsonapi.org/recommendations/).
+
+        Supports additional operators like `eql`, `prefix`, `suffix`, and `match`.
+        """
+        filters = []
+        for key, value in kwargs.items():
+            key_parts = key.replace('.', '__').split('__')
+            formatted_key = ''.join(f'[{part}]' for part in key_parts)
+            operator = ''
+            if isinstance(value, tuple) and len(value) == 2:
+                op, value = value
+                if op != EQ:
+                    operator = f'[{op.value}]'
+            if value is None: 
+                value = 'null'
+            filters.append(f'filter{formatted_key}{operator}={value}')
+        return '&'.join(filters)
 
 class Inclusion(Modifier):
     """
@@ -125,3 +181,35 @@ class Inclusion(Modifier):
     def appended_query(self) -> str:
         includes = ','.join(self._include_args)
         return f'include={includes}'
+
+class BaseFields(Modifier):
+    """
+    Base class for implementing fields attributes.
+    """
+    def __init__(self, fields_args: 'FieldKeywords', query_key: str) -> None:
+        super().__init__()
+        self._fields_args = fields_args
+        self._query_key = query_key
+
+    def appended_query(self) -> str:
+        return super().appended_query() or self.format_fields_query(**self._fields_args)
+
+    def format_fields_query(self, **kwargs: 'FieldKeywords') -> str:
+        return '&'.join(f'{self._query_key}[{resourceType}]={",".join(fields)}'
+                        for resourceType, fields in kwargs.items())
+
+
+class Fields(BaseFields):
+    """
+    Implements fields attributes.
+    """
+    def __init__(self, fields_args: 'FieldKeywords') -> None:
+        super().__init__(fields_args, query_key='fields')
+
+
+class ExtraFields(BaseFields):
+    """
+    Implements extra_fields attributes.
+    """
+    def __init__(self, fields_args: 'FieldKeywords') -> None:
+        super().__init__(fields_args, query_key='extra_fields')

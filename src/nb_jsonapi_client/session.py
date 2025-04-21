@@ -39,10 +39,14 @@ from typing import (TYPE_CHECKING, Set, Optional, Tuple, Dict, Union, Iterable,
 from urllib.parse import ParseResult, urlparse
 
 import jsonschema
+import yaml  # Ensure PyYAML is installed
+from importlib.resources import files
+
 
 from .common import jsonify_attribute_name, error_from_response, \
     HttpStatus, HttpMethod
 from .exceptions import DocumentError, AsyncError
+from .openapi_schema import convert_openapi_to_jsonschema
 
 if TYPE_CHECKING:
     from asyncio import AbstractEventLoop
@@ -51,6 +55,10 @@ if TYPE_CHECKING:
     from .resourceobject import ResourceObject
     from .relationships import ResourceTuple
     from .filter import Modifier
+
+from .nb_auth import get_auth_kwargs
+import os
+
 
 logger = logging.getLogger(__name__)
 NOT_FOUND = object()
@@ -142,6 +150,18 @@ class Session:
         if enable_async:
             import aiohttp
             self._aiohttp_session = aiohttp.ClientSession(loop=loop)
+        else:
+            import requests
+            from requests.adapters import HTTPAdapter, Retry
+            retries = Retry(
+                total=5,
+                backoff_factor=1,
+                status_forcelist=[500, 502, 503, 504, 522],
+                respect_retry_after_header=True,
+            )
+            self._requests_session = requests.Session()
+            self._requests_session.mount('https://', HTTPAdapter(max_retries=retries))
+
         self.use_relationship_iterator = use_relationship_iterator
 
     def add_resources(self, *resources: 'ResourceObject') -> None:
@@ -485,7 +505,7 @@ class Session:
         import requests
         parsed_url = urlparse(url)
         logger.info('Fetching document from url %s', parsed_url)
-        response = requests.get(parsed_url.geturl(), **self._request_kwargs)
+        response = self._requests_session.get(parsed_url.geturl(), **self._request_kwargs)
         response_content = response.json()
         if response.status_code == HttpStatus.OK_200:
             return response_content
@@ -531,7 +551,7 @@ class Session:
         headers = {'Content-Type':'application/vnd.api+json'}
         headers.update(kwargs.pop('headers', {}))
 
-        response = requests.request(http_method, url, json=send_json,
+        response = self._requests_session.request(http_method, url, json=send_json,
                                     headers=headers,
                                     **kwargs)
 
@@ -636,3 +656,31 @@ class Session:
         if not self.enable_async:
             logger.error(msg)
             raise AsyncError(msg)
+
+
+def nb_session():
+    """
+    Creates and returns a jsonapi_client Session object using environment variables.
+
+    Returns:
+        jsonapi_client.Session: Configured session object.
+    """
+    nb_slug = os.getenv("NB_SLUG")
+    schema_path = files("nb-jsonapi-client.data").joinpath("openapi-spec.yaml")
+    schema = convert_openapi_to_jsonschema(schema_path)
+    request_kwargs = get_auth_kwargs()
+    request_kwargs["timeout"] = 30  # Timeout in seconds
+
+    return Session(f'https://{nb_slug}.nationbuilder.com/api/v2', schema=schema, request_kwargs=request_kwargs)
+
+def nb_prepare_data(d, parent_key='', sep='__'):
+    """ Recursively flattens a nested dictionary into a single level dictionary with keys as the path to the value."""
+    items = []
+    for k, v in d.items():
+        new_key = f"{parent_key}{sep}{k}" if parent_key else k
+        if isinstance(v, dict):
+            items.extend(nb_prepare_data(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
+
