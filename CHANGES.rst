@@ -2,6 +2,13 @@ CHANGELOG
 =========
 
 
+0.9.10 (2026-02-12)
+-------------------
+
+- Fix async post custom header test for Python 3.8 compatible
+- Replace dead batteries for Python 3.12
+
+
 0.9.9 (2020-03-12)
 ------------------
 
