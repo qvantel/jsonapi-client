@@ -535,14 +535,17 @@ class Session:
                                     headers=headers,
                                     **kwargs)
 
-        response_json = response.json()
-        if response.status_code not in expected_statuses:
-            raise DocumentError(f'Could not {http_method.upper()} '
-                                f'({response.status_code}): '
-                                f'{error_from_response(response_json)}',
-                                errors={'status_code': response.status_code},
-                                response=response,
-                                json_data=send_json)
+        if (response.status_code == HttpStatus.NO_CONTENT_204):
+            response_json = {}
+        else:
+            response_json = response.json()
+            if response.status_code not in expected_statuses:
+                raise DocumentError(f'Could not {http_method.upper()} '
+                                    f'({response.status_code}): '
+                                    f'{error_from_response(response_json)}',
+                                    errors={'status_code': response.status_code},
+                                    response=response,
+                                    json_data=send_json)
 
         return response.status_code, response_json \
             if response.content \
