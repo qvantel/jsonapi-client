@@ -198,7 +198,7 @@ def mock_req_async(mocker):
 def mocked_fetch(mocker):
     def mock_fetch(url):
         parsed_url = urlparse(url)
-        file_path = parsed_url.path[1:]
+        file_path = parsed_url.path[1:].rstrip('/')
         query = parsed_url.query
         return load(f'{file_path}?{query}' if query else file_path)
 
@@ -210,8 +210,8 @@ def mocked_fetch(mocker):
         async def __call__(self, url):
             return mock_fetch(url)
 
-    m1 = mocker.patch('jsonapi_client.session.Session._fetch_json', new_callable=MockedFetch)
-    m2 = mocker.patch('jsonapi_client.session.Session._fetch_json_async', new_callable=MockedFetchAsync)
+    mocker.patch('jsonapi_client.session.Session._fetch_json', new_callable=MockedFetch)
+    mocker.patch('jsonapi_client.session.Session._fetch_json_async', new_callable=MockedFetchAsync)
     return
 
 
@@ -228,7 +228,7 @@ def session():
 
 def test_initialization(mocked_fetch, article_schema):
     s = Session('http://localhost:8080', schema=article_schema)
-    article = s.get('articles')
+    s.get('articles')
     assert s.resources_by_link['http://example.com/articles/1'] is \
            s.resources_by_resource_identifier[('articles', '1')]
     assert s.resources_by_link['http://example.com/comments/12'] is \
@@ -239,10 +239,23 @@ def test_initialization(mocked_fetch, article_schema):
            s.resources_by_resource_identifier[('people', '9')]
 
 
+def test_initialization_w_trailing_slash(mocked_fetch, article_schema):
+    s = Session('http://localhost:8080', schema=article_schema, trailing_slash=True)
+    s.get('articles')
+    assert s.resources_by_link['http://example.com/articles/1/'] is \
+           s.resources_by_resource_identifier[('articles', '1')]
+    assert s.resources_by_link['http://example.com/comments/12/'] is \
+           s.resources_by_resource_identifier[('comments', '12')]
+    assert s.resources_by_link['http://example.com/comments/5/'] is \
+           s.resources_by_resource_identifier[('comments', '5')]
+    assert s.resources_by_link['http://example.com/people/9/'] is \
+           s.resources_by_resource_identifier[('people', '9')]
+
+
 @pytest.mark.asyncio
 async def test_initialization_async(mocked_fetch, article_schema):
     s = Session('http://localhost:8080', enable_async=True, schema=article_schema)
-    article = await s.get('articles')
+    await s.get('articles')
     assert s.resources_by_link['http://example.com/articles/1'] is \
            s.resources_by_resource_identifier[('articles', '1')]
     assert s.resources_by_link['http://example.com/comments/12'] is \
@@ -271,6 +284,23 @@ def test_basic_attributes(mocked_fetch, article_schema):
     assert my_attrs == attr_set
 
 
+def test_basic_attributes_w_trailing_slash(mocked_fetch, article_schema):
+    s = Session('http://localhost:8080', schema=article_schema, trailing_slash=True)
+    doc = s.get('articles')
+    assert len(doc.resources) == 3
+    article = doc.resources[0]
+    assert article.id == "1"
+    assert article.type == "articles"
+    assert article.title.startswith('JSON API paints')
+
+    assert doc.links.self.href == 'http://example.com/articles/'
+    attr_set = {'title', 'author', 'comments', 'nested1', 'comment_or_author', 'comments_or_authors'}
+
+    my_attrs = {i for i in dir(article.fields) if not i.startswith('_')}
+
+    assert my_attrs == attr_set
+
+
 def test_resourceobject_without_attributes(mocked_fetch):
     s = Session('http://localhost:8080', schema=invitation_schema)
     doc = s.get('invitations')
@@ -285,6 +315,20 @@ def test_resourceobject_without_attributes(mocked_fetch):
 
     assert my_attrs == attr_set
 
+
+def test_resourceobject_without_attributes_w_trailing_slash(mocked_fetch):
+    s = Session('http://localhost:8080', schema=invitation_schema, trailing_slash=True)
+    doc = s.get('invitations')
+    assert len(doc.resources) == 1
+    invitation = doc.resources[0]
+    assert invitation.id == "1"
+    assert invitation.type == "invitations"
+    assert doc.links.self.href == 'http://example.com/invitations/'
+    attr_set = {'host', 'guest'}
+
+    my_attrs = {i for i in dir(invitation.fields) if not i.startswith('_')}
+
+    assert my_attrs == attr_set
 
 
 @pytest.mark.asyncio
@@ -337,6 +381,21 @@ def test_relationships_single(mocked_fetch, article_schema):
 
     assert article3.author is None
     assert article3.comment_or_author is None
+
+
+def test_relationships_single_w_trailing_slash(mocked_fetch, article_schema):
+    s = Session('http://localhost:8080', schema=article_schema, trailing_slash=True)
+    article, article2, article3 = s.get('articles').resources
+    author = article.author
+    assert {i for i in dir(author.fields) if not i.startswith('_')} \
+             == {'first_name', 'last_name', 'twitter'}
+    assert author.type == 'people'
+    assert author.id == '9'
+
+    assert author.first_name == 'Dan'
+    assert author['first-name'] == 'Dan'
+    assert author.last_name == 'Gebhardt'
+    assert article.relationships.author.links.self.href == "http://example.com/articles/1/relationships/author/"
 
 
 @pytest.mark.asyncio

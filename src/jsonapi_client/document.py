@@ -1,5 +1,5 @@
 """
-JSON API Python client 
+JSON API Python client
 https://github.com/qvantel/jsonapi-client
 
 (see JSON API specification in http://jsonapi.org/)
@@ -62,6 +62,8 @@ class Document(AbstractJsonObject):
                  no_cache: bool=False) -> None:
         self._no_cache = no_cache  # if true, do not store resources to session cache
         self._url = url
+        if session.trailing_slash and not self._url.endswith('/'):
+            self._url = self._url + '/'
         super().__init__(session, json_data)
 
     @property
@@ -113,11 +115,11 @@ class Document(AbstractJsonObject):
     def _iterator_sync(self) -> 'Iterator[ResourceObject]':
         # if we currently have no items on the page, then there's no need to yield items
         # and check the next page
-        # we do this because there are APIs that always have a 'next' link, even when 
+        # we do this because there are APIs that always have a 'next' link, even when
         # there are no items on the page
         if len(self.resources) == 0:
             return
-        
+
         yield from self.resources
 
         if self.links.next:
@@ -127,11 +129,11 @@ class Document(AbstractJsonObject):
     async def _iterator_async(self) -> 'AsyncIterator[ResourceObject]':
         # if we currently have no items on the page, then there's no need to yield items
         # and check the next page
-        # we do this because there are APIs that always have a 'next' link, even when 
+        # we do this because there are APIs that always have a 'next' link, even when
         # there are no items on the page
         if len(self.resources) == 0:
             return
-        
+
         for res in self.resources:
             yield res
 

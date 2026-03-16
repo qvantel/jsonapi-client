@@ -78,6 +78,8 @@ class Link(AbstractJsonObject):
                 self.meta = Meta(self.session, data.get('meta', {}))
         else:
             self.href = ''
+        if self.session.trailing_slash and self.href and not self.href.endswith('/'):
+            self.href = self.href + '/'
 
     def __eq__(self, other):
         return self.href == other.href
@@ -149,7 +151,7 @@ class ResourceIdentifier(AbstractJsonObject):
 
     @property
     def url(self):
-        return f'{self.session.url_prefix}/{self.type}/{self.id}'
+        return f'{self.session.url_prefix}/{self.type}/{self.id}{self.session.trailing_slash}'
 
     def __str__(self):
         return f'{self.type}: {self.id}'
