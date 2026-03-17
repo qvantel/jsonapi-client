@@ -37,5 +37,5 @@ except ImportError:
     __version__ = get_distribution("jsonapi-client").version
 
 from .session import Session
-from .filter import Filter, Inclusion, Modifier
+from .filter import Filter, Inclusion, Modifier, Sort
 from .common import ResourceTuple

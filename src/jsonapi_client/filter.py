@@ -125,3 +125,16 @@ class Inclusion(Modifier):
     def appended_query(self) -> str:
         includes = ','.join(self._include_args)
         return f'include={includes}'
+
+
+class Sort(Modifier):
+    """
+    Implements query inclusion for Session.get etc.
+    """
+    def __init__(self, *sort_args: 'SortKeywords') -> None:
+        super().__init__()
+        self._sort_args = sort_args
+
+    def appended_query(self) -> str:
+        sort_by = ','.join(self._sort_args)
+        return f'sort={sort_by}'
